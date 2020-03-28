@@ -40,7 +40,25 @@ Save 1080p (from full frame, then resize)
 gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2 ! 'video/x-raw,width=1440, height=1080' ! omxh264enc ! qtmux ! filesink location=1080p_from_full.mp4 -e
 ```
 
-## IR  - Save 160x120
+## IR  - Save 
+## Gray 16-bit 160x120
 ```shell
-gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=GRAY16_LE ! videoscale ! video/x-raw,width=160,height=120 ! videoconvert ! omxh264enc ! qtmux ! filesink location=grayscale_raw.mp4 
+gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=GRAY16_LE ! videoscale ! video/x-raw,width=160,height=120 ! videoconvert ! omxh264enc ! qtmux ! filesink location=grayscale_raw.mp4 -e
 ```
+## Save to avi
+gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=GRAY16_LE ! videoscale ! video/x-raw,width=800,height=600 ! videoconvert ! jpegenc ! avimux ! filesink location=test.avi -e
+
+## Gray 8-bit resized to 
+gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=GRAY8 ! videoscale ! video/x-raw,width=800,height=600 ! videoconvert ! omxh264enc ! qtmux ! filesink location=grayscale_raw.mp4 -e
+
+
+# Nvidia overlay display
+gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2  ! nvvidconv top=100 bottom=2364 left=300 right=3164 ! 'video/x-raw(memory:NVMM),width=1440, height=1080' ! nvoverlaysink display-id=0 -e
+
+
+# take away 137 on the sides, 
+
+horizontal: 3264-137=3127
+vertical: 2464-96=2368
+
+gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2  ! nvvidconv top=96 bottom=2368 left=137 right=3127 ! 'video/x-raw(memory:NVMM),width=1440, height=1080' ! omxh264enc ! qtmux ! filesink location=RGB.mp4 -e 
