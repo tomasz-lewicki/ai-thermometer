@@ -1,10 +1,12 @@
-To run a basic visualization (without any radiometry) you can do:
+# Basic visualization (without any radiometry):
+
+Likely, you do not need any 
 
 ```shell
 gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=UYVY ! videoscale ! video/x-raw,width=800,height=600 ! videoconvert ! ximagesink
 ```
 
-
+We can also do some simple 
 To record footage from both IR and RGB cameras at the same time, do:
 ```shell
 bash deploy_rgb.sh & bash deploy_ir.sh ; fg
@@ -39,7 +41,31 @@ cp ~/tmp/libuvc/build/libuvc.so ~/crowd-thermometer/
 sudo apt-get install python-opencv
 ```
 
+4. Install ROS2
 
+https://index.ros.org/doc/ros2/Installation/
+
+5. Install jetson-inference
+
+https://github.com/dusty-nv/jetson-inference
+
+6. Make sure your user has r/w access to the camera. 
+
+For a quick and dirty solution do:
+
+```shell
+echo 'SUBSYSTEM=="usb",  ENV{DEVTYPE}=="usb_device", GROUP="plugdev", MODE="0664"' | sudo tee /etc/udev/rules.d/10-libuvc.rules 
+sudo udevadm trigger
+```
+<span style="color: red">(this gives camera access to all users)</span>
+
+For a better, fine-grained permission setup, create a new group, give permissions to that group only and your user to the newly created group
+To read more: http://wiki.ros.org/libuvc_camera#Permissions
+
+7. Run the nodes
+```shell
+source /opt/ros/dashing/setup.bash
+```
 
 # Potential issues:
 
