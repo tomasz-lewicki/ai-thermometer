@@ -3,16 +3,18 @@ from rclpy.node import Node
 
 from std_msgs.msg import String
 import jsonpickle
+import cv2
 
 class Listener(Node):
 
     def __init__(self):
-        super().__init__('heatmap_listener')
+        super().__init__('heatmap_printer')
         self.sub = self.create_subscription(String, 'heatmap', self.chatter_callback, 10)
 
     def chatter_callback(self, msg):
         hmap = jsonpickle.decode(msg.data)
-        print(f'Persons temp. : {round(hmap.max(), 4)} deg C')
+        print(hmap)
+        # cv2.imshow('heatmap', hmap)
 
 
 # The simplest listener for the heatmap:
