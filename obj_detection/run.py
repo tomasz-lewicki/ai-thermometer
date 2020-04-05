@@ -19,6 +19,25 @@ import cv2
 import numpy as np
 import copy
 
+
+def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
+
+    # Constants
+    rgb_native_w, rgb_native_h = 3264, 2464
+    ir_w, ir_h = 160, 120
+    margin = 0.1
+    scale_x = scale_y = rgb_native_w / ir_w * (1 - margin)
+
+    capture_res_w, capture_res_h = capture_res
+    scale_x *= capture_res_w / rgb_native_w
+    scale_y *= capture_res_h / rgb_native_h
+
+    x_ir = (x_rgb - capture_res_w / 2) / scale_x + ir_w / 2
+    y_ir = (y_rgb - capture_res_h / 2) / scale_y + ir_h / 2
+
+    return int(x_ir), int(y_ir)
+
+
 if __name__ == "__main__":
 
     rclpy.init(args=None)
