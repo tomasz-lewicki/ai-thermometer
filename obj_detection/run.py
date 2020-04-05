@@ -6,6 +6,7 @@ import jetson.utils
 import time
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
 
 # For ROS2 messages
 import jsonpickle
@@ -18,6 +19,17 @@ import cv2
 # import scipy.misc
 import numpy as np
 import copy
+
+
+class HeatmapClient(Node):
+    def __init__(self):
+        super().__init__("heatmap_listener")
+        self.hm = None
+        self.sub = self.create_subscription(String, "heatmap", self.hm_callback, 10)
+
+    def hm_callback(self, msg):
+        self.hm = jsonpickle.decode(msg.data)
+        print(f"Persons temp. : {round(self.hm.max(), 4)} deg C")
 
 
 def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
@@ -40,66 +52,91 @@ def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
 
 if __name__ == "__main__":
 
+    # Create detections publisher
     rclpy.init(args=None)
     node = rclpy.create_node("minimal_publisher")
     publisher = node.create_publisher(String, "rgb_detections", 10)
 
-    # net = jetson.inference.detectNet("ssd-mobilenet-v2", threshold=0.1)
+    irclient = HeatmapClient()
+    executor = MultiThreadedExecutor(num_threads=1)
+    executor.add_node(irclient)
+
+    from threading import Thread
+
+    t = Thread()
+    t.run = executor.spin
+    t.start()
+
+    # Set up inference
     net = jetson.inference.detectNet("ssd-inception-v2", threshold=0.5)
     camera = jetson.utils.gstCamera(1280, 720, "0")
 
     # process frames until user exits
-    while True:
+    try:
+        while True:
 
-        img_ptr, width, height = camera.CaptureRGBA(zeroCopy=1)
+            img_ptr, width, height = camera.CaptureRGBA(zeroCopy=1)
 
-        detections = net.Detect(img_ptr, width, height, overlay="none")
+            detections = net.Detect(img_ptr, width, height, overlay="none")
 
-        # Copy from cuda memory, so GPU doesn't override the image while visualizing
-        # It's only needed if we visualize
-        img = copy.copy(jetson.utils.cudaToNumpy(img_ptr, width, height, 4))
-        img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)  # convert to RGB
+            # Copy from cuda memory, so GPU doesn't override the image while visualizing
+            # It's only needed if we visualize
+            img = copy.copy(jetson.utils.cudaToNumpy(img_ptr, width, height, 4))
+            img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)  # convert to RGB
 
-        for d in detections:
-            right, top, left, bottom = (
-                int(d.Right),
-                int(d.Top),
-                int(d.Left),
-                int(d.Bottom),
-            )
+            for d in detections:
 
-            # draw bounding box
-            class_name = coco_classes[d.ClassID]
-            conf = d.Confidence
-            img = cv2.rectangle(img, (right, top), (left, bottom), (255, 0, 0))
-            cv2.putText(
-                img,
-                f"{class_name}: {round(conf,4)}",
-                (right, top),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (255, 255, 255),
-            )
+                right, top, left, bottom = (
+                    int(d.Right),
+                    int(d.Top),
+                    int(d.Left),
+                    int(d.Bottom),
+                )
 
-        img = cv2.resize(img, (568, 320))
-        img = 255 * (img - img.min()) / img.max()  # normalize to 0-255
-        img = np.array(img, dtype=np.uint8)  # Convert from fp16 to uint8
+                top_left, bottom_right = (
+                    rgb_to_ir_coords(right, top),
+                    rgb_to_ir_coords(bottom, right),
+                )
 
-        cv2.imshow("Crowd Thermometer Demo", img)
-        cv2.waitKey(1)
+                print("top: ", top_left)
+                print("bottom: ", bottom_right)
 
-        # Profiler
-        net.PrintProfilerTimes()
+                print(irclient.hm.max())
 
-        # ROS
-        m = String()
+                # draw bounding box
+                class_name = coco_classes[d.ClassID]
+                conf = d.Confidence
+                img = cv2.rectangle(img, (right, top), (left, bottom), (255, 0, 0))
+                cv2.putText(
+                    img,
+                    f"{class_name}: {round(conf,4)}",
+                    (right, top),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (255, 255, 255),
+                )
 
-        to_send = [
-            {"object": d.ClassID, "center_location": d.Center} for d in detections
-        ]
+            img = cv2.resize(img, (568, 320))
+            img = 255 * (img - img.min()) / img.max()  # normalize to 0-255
+            img = np.array(img, dtype=np.uint8)  # Convert from fp16 to uint8
 
-        m.data = jsonpickle.encode(to_send)
-        publisher.publish(m)
+            cv2.imshow("Crowd Thermometer Demo", img)
+            cv2.waitKey(1)
 
-    node.destroy_node()
-    rclpy.shutdown()
+            # Profiler
+            net.PrintProfilerTimes()
+
+            # ROS
+            m = String()
+
+            to_send = [
+                {"object": d.ClassID, "center_location": d.Center} for d in detections
+            ]
+
+            m.data = jsonpickle.encode(to_send)
+            publisher.publish(m)
+    finally:
+        executor.shutdown()
+        irclient.destroy_node()
+        t.join()
+        rclpy.shutdown()
