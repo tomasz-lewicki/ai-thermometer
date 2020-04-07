@@ -31,13 +31,13 @@ class HeatmapClient(Node):
         print(f"Persons temp. : {round(self.hm.max(), 4)} deg C")
 
 
-def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
+def rgb_to_ir_coords(y_rgb, x_rgb, capture_res=(1280, 720)):
 
     # Constants
     rgb_native_w, rgb_native_h = 3264, 2464
     ir_w, ir_h = 160, 120
-    margin = 0.15
-    scale_x = rgb_native_w / ir_w * (1 - margin)
+    margin = 0.1
+    scale_x = rgb_native_w / ir_w * (1 - margin) # scale = 5 means 5 RGB pixels / 1 IR pixel
     scale_y = rgb_native_h / ir_h * (1 - margin)
 
     capture_res_w, capture_res_h = capture_res
@@ -47,13 +47,14 @@ def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
     x_ir = (x_rgb - capture_res_w / 2) / scale_x + ir_w / 2
     y_ir = (y_rgb - capture_res_h / 2) / scale_y + ir_h / 2
 
-    return [int(x_ir), int(y_ir)]
+    return [int(y_ir), int(x_ir)]
 
 
 if __name__ == "__main__":
 
     DEMO_HEIGHT = 320
-    RGB_SHAPE = (1920, 1080)
+    RGB_SHAPE = (1280, 720)
+    # RGB_SHAPE = (3264, 2464)jet
 
     # Create detections publisher
     rclpy.init(args=None)
@@ -103,17 +104,18 @@ if __name__ == "__main__":
                 )
 
                 # transform coordinates to IR sensor
-                tlc = rgb_to_ir_coords(left, top, capture_res=RGB_SHAPE)  # tlc - top left corner
-                brc = rgb_to_ir_coords(right, bottom, capture_res=RGB_SHAPE)  # brc - bottom right corner
+                tlc = rgb_to_ir_coords(top, left, capture_res=RGB_SHAPE)  # tlc - top left corner
+                brc = rgb_to_ir_coords(bottom, right, capture_res=RGB_SHAPE)  # brc - bottom right corner
 
-                # clip x coords between 0-159
                 ir_w, ir_h = 160, 120  # dimensions of IR sensor
-                tlc[0] = min(max(0, tlc[0]), ir_w - 1)
-                brc[0] = min(max(0, brc[0]), ir_w - 1)
 
                 # clip y coords between 0-119
-                tlc[1] = min(max(0, tlc[1]), ir_h - 1)
-                brc[1] = min(max(0, brc[1]), ir_h - 1)
+                tlc[0] = min(max(0, tlc[0]), ir_h - 1)
+                brc[0] = min(max(0, brc[0]), ir_h - 1)
+
+                # clip x coords between 0-159
+                tlc[1] = min(max(0, tlc[1]), ir_w - 1)
+                brc[1] = min(max(0, brc[1]), ir_w - 1)
 
                 obj_heatmap = irclient.hm[tlc[0] : brc[0], tlc[1] : brc[1]]
 
@@ -125,11 +127,11 @@ if __name__ == "__main__":
                 conf = d.Confidence
 
                 # draw RGB bounding box
-                img = cv2.rectangle(img, (right, top), (left, bottom), (255, 0, 0))
+                img = cv2.rectangle(img, (right, top), (left, bottom), color=(0, 255, 0), thickness=5)
 
                 cv2.putText(
                     img,
-                    text=f"{class_name} ({round(100*conf,2)}%): {round(obj_heatmap.max(),1)} deg C",
+                    text= f"{class_name} ({round(100*conf,2)}%): {np.max(obj_heatmap)} deg C",
                     org=(left, max(top - 20, 0)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=1,
@@ -139,7 +141,7 @@ if __name__ == "__main__":
 
                 # draw IR bounding box
                 img_ir = cv2.rectangle(
-                    img_ir, (tlc[0], tlc[1]), (brc[0], brc[1]), (255, 255, 255)
+                    img_ir, (tlc[1], tlc[0]), (brc[1], brc[0]), (255, 255, 255)
                 )
 
             img = img.astype(np.uint8)  # Convert from fp16 to uint8
