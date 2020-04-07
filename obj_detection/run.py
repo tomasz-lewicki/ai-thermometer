@@ -20,7 +20,6 @@ import cv2
 import numpy as np
 import copy
 
-
 class HeatmapClient(Node):
     def __init__(self):
         super().__init__("heatmap_listener")
@@ -37,8 +36,9 @@ def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
     # Constants
     rgb_native_w, rgb_native_h = 3264, 2464
     ir_w, ir_h = 160, 120
-    margin = 0.1
-    scale_x = scale_y = rgb_native_w / ir_w * (1 - margin)
+    margin = 0.15
+    scale_x = rgb_native_w / ir_w * (1 - margin)
+    scale_y = rgb_native_h / ir_h * (1 - margin)
 
     capture_res_w, capture_res_h = capture_res
     scale_x *= capture_res_w / rgb_native_w
@@ -47,10 +47,13 @@ def rgb_to_ir_coords(x_rgb, y_rgb, capture_res=(1280, 720)):
     x_ir = (x_rgb - capture_res_w / 2) / scale_x + ir_w / 2
     y_ir = (y_rgb - capture_res_h / 2) / scale_y + ir_h / 2
 
-    return int(x_ir), int(y_ir)
+    return [int(x_ir), int(y_ir)]
 
 
 if __name__ == "__main__":
+
+    DEMO_HEIGHT = 320
+    RGB_SHAPE = (1920, 1080)
 
     # Create detections publisher
     rclpy.init(args=None)
@@ -69,7 +72,7 @@ if __name__ == "__main__":
 
     # Set up inference
     net = jetson.inference.detectNet("ssd-inception-v2", threshold=0.5)
-    camera = jetson.utils.gstCamera(1280, 720, "0")
+    camera = jetson.utils.gstCamera(*RGB_SHAPE, "0")
 
     # process frames until user exits
     try:
@@ -84,6 +87,12 @@ if __name__ == "__main__":
             img = copy.copy(jetson.utils.cudaToNumpy(img_ptr, width, height, 4))
             img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)  # convert to RGB
 
+            # Get an image from IR listener (as a copy, because we will draw over it)
+            img_ir = copy.copy(irclient.hm)
+            img_ir = cv2.normalize(img_ir, None, 0, 255, cv2.NORM_MINMAX)
+            img_ir = img_ir.astype(np.uint8)
+            img_ir = cv2.cvtColor(img_ir, cv2.COLOR_GRAY2BGR)
+
             for d in detections:
 
                 right, top, left, bottom = (
@@ -93,40 +102,60 @@ if __name__ == "__main__":
                     int(d.Bottom),
                 )
 
-                top_left, bottom_right = (
-                    rgb_to_ir_coords(right, top),
-                    rgb_to_ir_coords(bottom, right),
-                )
+                # transform coordinates to IR sensor
+                tlc = rgb_to_ir_coords(left, top, capture_res=RGB_SHAPE)  # tlc - top left corner
+                brc = rgb_to_ir_coords(right, bottom, capture_res=RGB_SHAPE)  # brc - bottom right corner
 
-                print("top: ", top_left)
-                print("bottom: ", bottom_right)
+                # clip x coords between 0-159
+                ir_w, ir_h = 160, 120  # dimensions of IR sensor
+                tlc[0] = min(max(0, tlc[0]), ir_w - 1)
+                brc[0] = min(max(0, brc[0]), ir_w - 1)
 
-                print(irclient.hm.max())
+                # clip y coords between 0-119
+                tlc[1] = min(max(0, tlc[1]), ir_h - 1)
+                brc[1] = min(max(0, brc[1]), ir_h - 1)
 
-                # draw bounding box
+                obj_heatmap = irclient.hm[tlc[0] : brc[0], tlc[1] : brc[1]]
+
+                if irclient.hm is not None:
+                    print(f"Average temperature: {irclient.hm.mean()}")
+                    # print(obj_heatmap.max())
+
                 class_name = coco_classes[d.ClassID]
                 conf = d.Confidence
+
+                # draw RGB bounding box
                 img = cv2.rectangle(img, (right, top), (left, bottom), (255, 0, 0))
+
                 cv2.putText(
                     img,
-                    f"{class_name}: {round(conf,4)}",
-                    (right, top),
+                    f"{class_name} ({round(100*conf,2)}%): {obj_heatmap.max()}",
+                    (left, max(top - 20, 0)),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     1,
                     (255, 255, 255),
                 )
 
-            img = cv2.resize(img, (568, 320))
-            img = 255 * (img - img.min()) / img.max()  # normalize to 0-255
-            img = np.array(img, dtype=np.uint8)  # Convert from fp16 to uint8
+                # draw IR bounding box
+                img_ir = cv2.rectangle(
+                    img_ir, (tlc[0], tlc[1]), (brc[0], brc[1]), (255, 255, 255)
+                )
 
-            cv2.imshow("Crowd Thermometer Demo", img)
+            img = img.astype(np.uint8)  # Convert from fp16 to uint8
+            img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+            img = cv2.resize(img, (568, 320))
+
+            img_ir = cv2.resize(img_ir, (int(4 / 3 * DEMO_HEIGHT), DEMO_HEIGHT))
+
+            # display
+            stacked_imgs = np.hstack([img, img_ir])
+            cv2.imshow("Heatmap", stacked_imgs)
             cv2.waitKey(1)
 
             # Profiler
             net.PrintProfilerTimes()
 
-            # ROS
+            # Publish detections in a ROS topic
             m = String()
 
             to_send = [
