@@ -1,4 +1,4 @@
-from uvclib_wrapper import *
+from libuvc_wrapper import *
 import time
 import cv2
 import numpy as np
