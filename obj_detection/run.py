@@ -129,11 +129,12 @@ if __name__ == "__main__":
 
                 cv2.putText(
                     img,
-                    f"{class_name} ({round(100*conf,2)}%): {obj_heatmap.max()}",
-                    (left, max(top - 20, 0)),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (255, 255, 255),
+                    text=f"{class_name} ({round(100*conf,2)}%): {round(obj_heatmap.max(),1)} deg C",
+                    org=(left, max(top - 20, 0)),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    fontScale=1,
+                    color=(255, 255, 255),
+                    thickness=3
                 )
 
                 # draw IR bounding box
