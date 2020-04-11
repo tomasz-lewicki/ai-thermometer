@@ -31,21 +31,18 @@ class HeatmapClient(Node):
         print(f"Persons temp. : {round(self.hm.max(), 4)} deg C")
 
 
-def rgb_to_ir_coords(y_rgb, x_rgb, capture_res=(1280, 720)):
+def rgb_to_ir_coords(y_rgb_px, x_rgb_px, capture_res=(1280, 720)):
 
     # Constants
     rgb_native_w, rgb_native_h = 3264, 2464
     ir_w, ir_h = 160, 120
-    margin = 0.1
-    scale_x = rgb_native_w / ir_w * (1 - margin) # scale = 5 means 5 RGB pixels / 1 IR pixel
-    scale_y = rgb_native_h / ir_h * (1 - margin)
+    # get coords in (0-1.0) range
+    y_rgb = y_rgb_px/capture_res[1]
+    x_rgb = x_rgb_px/capture_res[0]
 
-    capture_res_w, capture_res_h = capture_res
-    scale_x *= capture_res_w / rgb_native_w
-    scale_y *= capture_res_h / rgb_native_h
-
-    x_ir = (x_rgb - capture_res_w / 2) / scale_x + ir_w / 2
-    y_ir = (y_rgb - capture_res_h / 2) / scale_y + ir_h / 2
+    # x_ir = (x_rgb+0.05) * ir_w * 0.9 
+    x_ir = x_rgb * ir_w 
+    y_ir = y_rgb * ir_h * 0.75 + 15 
 
     return [int(y_ir), int(x_ir)]
 
@@ -54,7 +51,7 @@ if __name__ == "__main__":
 
     DEMO_HEIGHT = 320
     RGB_SHAPE = (1280, 720)
-    # RGB_SHAPE = (3264, 2464)jet
+    # RGB_SHAPE = (3264, 2464)
 
     # Create detections publisher
     rclpy.init(args=None)
@@ -106,7 +103,7 @@ if __name__ == "__main__":
                 # transform coordinates to IR sensor
                 tlc = rgb_to_ir_coords(top, left, capture_res=RGB_SHAPE)  # tlc - top left corner
                 brc = rgb_to_ir_coords(bottom, right, capture_res=RGB_SHAPE)  # brc - bottom right corner
-
+                
                 ir_w, ir_h = 160, 120  # dimensions of IR sensor
 
                 # clip y coords between 0-119
@@ -132,7 +129,7 @@ if __name__ == "__main__":
                 cv2.putText(
                     img,
                     text= f"{class_name} ({round(100*conf,2)}%): {np.max(obj_heatmap)} deg C",
-                    org=(left, max(top - 20, 0)),
+                    org=(left, max(top + 30, 0)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=1,
                     color=(255, 255, 255),
@@ -148,7 +145,9 @@ if __name__ == "__main__":
             img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
             img = cv2.resize(img, (568, 320))
 
-            img_ir = cv2.resize(img_ir, (int(4 / 3 * DEMO_HEIGHT), DEMO_HEIGHT))
+            img_ir = img_ir[15:106 , :]
+            # img_ir = cv2.resize(img_ir, (int(4 / 3 * DEMO_HEIGHT), DEMO_HEIGHT))
+            img_ir = cv2.resize(img_ir, (int(16 / 9 * DEMO_HEIGHT), DEMO_HEIGHT))
 
             # display
             stacked_imgs = np.hstack([img, img_ir])
