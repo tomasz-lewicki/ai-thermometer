@@ -46,13 +46,14 @@ def rgb_to_ir_coords(y_rgb_px, x_rgb_px, capture_res=(1280, 720)):
 
     return [int(y_ir), int(x_ir)]
 
+def ctof(deg_c):
+    return round(1.8*deg_c + 32, 2)
 
 if __name__ == "__main__":
 
     DEMO_HEIGHT = 320
     RGB_SHAPE = (1280, 720)
     # RGB_SHAPE = (3264, 2464)
-
     # Create detections publisher
     rclpy.init(args=None)
     node = rclpy.create_node("minimal_publisher")
@@ -73,9 +74,10 @@ if __name__ == "__main__":
     camera = jetson.utils.gstCamera(*RGB_SHAPE, "0")
 
     # process frames until user exits
+    it = 0
     try:
         while True:
-
+            it +=1
             img_ptr, width, height = camera.CaptureRGBA(zeroCopy=1)
 
             detections = net.Detect(img_ptr, width, height, overlay="none")
@@ -125,21 +127,24 @@ if __name__ == "__main__":
 
                 # draw RGB bounding box
                 img = cv2.rectangle(img, (right, top), (left, bottom), color=(0, 255, 0), thickness=5)
+                
+                ambient_temp = irclient.hm.mean()
+                temp = obj_heatmap.max() if obj_heatmap.mean() > ambient_temp else obj_heatmap.min()
 
                 cv2.putText(
                     img,
-                    text= f"{class_name} ({round(100*conf,2)}%): {np.max(obj_heatmap)} deg C",
+                    text= f"{class_name} ({round(100*conf,2)}%): {temp} deg C {ctof(temp)} deg F",
                     org=(left, max(top + 30, 0)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=1,
+                    fontScale=0.7,
                     color=(255, 255, 255),
-                    thickness=3
+                    thickness=2
                 )
 
                 # draw IR bounding box
-                img_ir = cv2.rectangle(
-                    img_ir, (tlc[1], tlc[0]), (brc[1], brc[0]), (255, 255, 255)
-                )
+                # img_ir = cv2.rectangle(
+                #     img_ir, (tlc[1], tlc[0]), (brc[1], brc[0]), (255, 255, 255)
+                # )
 
             img = img.astype(np.uint8)  # Convert from fp16 to uint8
             img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
@@ -147,11 +152,16 @@ if __name__ == "__main__":
 
             img_ir = img_ir[15:106 , :]
             # img_ir = cv2.resize(img_ir, (int(4 / 3 * DEMO_HEIGHT), DEMO_HEIGHT))
+            img_ir = cv2.applyColorMap(img_ir, cv2.COLORMAP_JET)
             img_ir = cv2.resize(img_ir, (int(16 / 9 * DEMO_HEIGHT), DEMO_HEIGHT))
 
-            # display
+            # 
             stacked_imgs = np.hstack([img, img_ir])
+            
+            # display images
+            cv2.imwrite(f'/home/nvidia/crowd-thermometer/output/test{it:05}.jpg', stacked_imgs)
             cv2.imshow("Heatmap", stacked_imgs)
+
             cv2.waitKey(1)
 
             # Profiler
