@@ -134,9 +134,9 @@ if __name__ == "__main__":
                 cv2.putText(
                     img,
                     text= f"{class_name} ({round(100*conf,2)}%): {temp} deg C {ctof(temp)} deg F",
-                    org=(left, max(top + 30, 0)),
+                    org=(left+10, max(top + 40, 0)),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.7,
+                    fontScale=1.5,
                     color=(255, 255, 255),
                     thickness=2
                 )
