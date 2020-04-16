@@ -142,3 +142,4 @@ cython_debug/
 media
 static
 *.mp4
+output/
