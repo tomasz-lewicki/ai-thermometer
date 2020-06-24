@@ -20,7 +20,7 @@ def gstreamer_pipeline(
     capture_height=2464,
     display_width=1024,
     display_height=768,
-    framerate=21,
+    framerate=10,
     flip_method=2,
 ):
 
@@ -59,7 +59,7 @@ class HeatmapClient(Node):
 def ir_processing(ir_arr):
 
     ir_arr = cv2.resize(ir_arr, SIZE)  # upscale
-    ir_arr[ir_arr < 30] = 0  # clip at 30deg C
+    ir_arr[ir_arr < 33] = 0  # clip at 30deg C
     ir_arr_normalized = cv2.normalize(
         ir_arr, None, 0, 255, cv2.NORM_MINMAX
     )  # normalize to 0-255
@@ -77,40 +77,78 @@ def rgb_processing(rgb_arr):
     rgb_arr = cv2.warpAffine(
         rgb_arr, T, (rgb_arr.shape[1], rgb_arr.shape[0])
     )  # transform
-    rgb_arr = cv2.cvtColor(rgb_arr, cv2.COLOR_BGR2GRAY)
 
     return rgb_arr
 
-def detect_faces(gray_arr, face_clf, eye_clf):
+def detect_faces_haar(gray_arr, face_clf, eye_clf):
     """
     :param gray_arr: np grayscale aray with the image
     :param fc: cv2.CascadeClassifier object for face classification
     :param ec: cv2.CascadeClassifier object for eye classification
     """
 
+    detections = []
     faces = face_clf.detectMultiScale(gray_arr, 1.3, 5)
 
-    for (x, y, w, h) in faces:
-
-        cv2.rectangle(gray_arr, (x, y), (x + w, y + h), (255, 255, 255), 2)
+    for face in faces:
+        (x, y, w, h) = face
         roi = gray_arr[y : y + h, x : x + w]
-        eyes = eye_clf.detectMultiScale(roi)
+        # perform eye classification
+        eyes = eye_clf.detectMultiScale(roi)  
+
+        detections.append((face, eyes))
+
+    return detections
+
+def overlay_bboxes(rgb_arr, detections):
+
+    for (face, eyes) in detections:
+
+        print(face)
+        x, y, w, h = face
+
+        # draw face bounding box
+        cv2.rectangle(rgb_arr, (x, y), (x + w, y + h), FACE_BB_COLOR, 2)
+        roi = rgb_arr[y : y + h, x : x + w]
 
         for (ex, ey, ew, eh) in eyes:
-            cv2.rectangle(roi, (ex, ey), (ex + ew, ey + eh), (255, 255, 255), 2)
+            # draw eye bouding box
+            cv2.rectangle(roi, (ex, ey), (ex + ew, ey + eh), EYES_BB_COLOR, 2)
 
-    return gray_arr
+    return rgb_arr
 
 
-def compose_channels(gray, ir):
+def compose_gray_ir(gray, ir, ir_opacity=0.5):
     
     blue = gray
     red = ir
     green = np.zeros_like(blue)
+    red = np.zeros_like(blue)
 
     composed_arr = np.stack([blue, green, red], axis=-1)
 
     return composed_arr
+
+def compose_vis_ir(vis, ir, ir_opacity=0.5):
+    
+    vis = vis.astype(np.uint32)
+    vis[:,:,2] += ir 
+    vis[vis>255] = 255
+    vis = vis.astype(np.uint8)
+
+    return vis
+
+def images_bad(rgb_arr, ir_arr):
+    bad = False
+
+    if ir_arr is None:
+        print("Waiting for IR frames...")
+        bad = True
+    if rgb_arr is None:
+        print("Waiting for RGB frames...")
+        bad = True
+
+    return bad
 
 def camera_loop():
 
@@ -125,7 +163,6 @@ def camera_loop():
         ),
         cv2.CAP_GSTREAMER,
     )
-    window_handle = cv2.namedWindow("CSI Camera", cv2.WINDOW_AUTOSIZE)
 
     face_cascade = cv2.CascadeClassifier(
         "/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml"
@@ -140,43 +177,37 @@ def camera_loop():
 
         t = time.monotonic()
 
-        # get RGB frame
-        # get IR frame
-        ir_arr = irclient.hm 
-        ret_val, rgb_arr = cap.read()
-        gray_arr = rgb_processing(rgb_arr)
+        ir_arr = irclient.hm # get IR frame
+        ret_val, rgb_arr = cap.read() # get RGB frame
         
-
-        # check if we got IR frames
-        if ir_arr is None:
-            print("Waiting for IR frames...")
-            time.sleep(0.1)
-            continue
-        
-        if rgb_arr is None:
-            print("Waiting for RGB frames...")
+        # check if we got frames from cameras
+        if images_bad(ir_arr, rgb_arr):
             time.sleep(0.1)
             continue
 
+        # preprocessing
+        rgb_arr = rgb_processing(rgb_arr)
+        gray_arr = cv2.cvtColor(rgb_arr, cv2.COLOR_BGR2GRAY)
+        gray_arr_3ch = cv2.cvtColor(gray_arr, cv2.COLOR_GRAY2BGR)
         ir_arr = ir_processing(ir_arr)
 
-        composed_arr = compose_channels(gray_arr, ir_arr)
+        # face detection
+        detections = detect_faces_haar(gray_arr, face_cascade, eye_cascade)
+
+        # bbox overlay
+        gray_arr_3ch = overlay_bboxes(gray_arr_3ch, detections)
+
+        # gray_arr = detect_faces(gray_arr, face_cascade) # No eyes
+
+        composed_arr = compose_vis_ir(gray_arr_3ch, ir_arr)
 
         cv2.imshow(APP_NAME, composed_arr)
-
         cv2.waitKey(1)
-        
+
         saving_executor.submit(cv2.imwrite, f"frames/{i:05d}.jpg", composed_arr)
-
-        # frames.append(ir_rgb_arr) 
-
+ 
         delay = time.monotonic()-t
         print(f"Loop FPS {int(1/delay)}")
-
-    # TODO: save images in a separate thread worker
-    # dump the frames
-    # for idx, frame in enumerate(frames):
-    #     cv2.imwrite(, frame)
 
     # cleanup
     cap.release()
@@ -187,6 +218,8 @@ if __name__ == "__main__":
 
     SIZE = (1024, 768)
     APP_NAME = "Crowd Thermometer"
+    FACE_BB_COLOR = (255, 255, 255) # white
+    EYES_BB_COLOR = (255, 255, 0) # yellow
 
     rclpy.init(args=None)
 
