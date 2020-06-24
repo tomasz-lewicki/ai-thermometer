@@ -59,7 +59,6 @@ class HeatmapClient(Node):
 def ir_processing(ir_arr):
 
     ir_arr = cv2.resize(ir_arr, SIZE)  # upscale
-    # ir_arr[ir_arr < 30] = 0  # clip at 30deg C
 
     return ir_arr
 
@@ -122,7 +121,7 @@ def overlay_bboxes(rgb_arr, detections, temps):
             text=f"{deg_c} deg C {deg_f} deg F",
             org=(x,y),
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-            fontScale=1.5,
+            fontScale=1,
             color=(255, 255, 255),
             thickness=2
         )
@@ -132,7 +131,6 @@ def overlay_bboxes(rgb_arr, detections, temps):
         for (ex, ey, ew, eh), eye_t in zip(eyes, temp['eyes']):
             # draw eye bouding box
             cv2.rectangle(roi, (ex, ey), (ex + ew, ey + eh), EYES_BB_COLOR, 2)
-            print(eye_t)
 
     return rgb_arr
 
@@ -145,16 +143,28 @@ def get_temps(ir_arr, detections):
         x, y, w, h = face
         roi_face = ir_arr[y : y + h, x : x + w]
 
-        temp = {'face': roi_face.mean(), 'eyes': []}
+        temp = {'face': roi_face[roi_face>30].mean(), 'eyes': []}
         
         for (ex, ey, ew, eh) in eyes:
             roi_eye = roi_face[ey : ey + eh, ex : ex + ew]
-            print(roi_eye)
-            temp['eyes'].append(roi_eye.mean())
+            temp['eyes'].append(roi_eye[roi_eye>30].mean())
 
         temps.append(temp)
 
     return temps
+
+def apply_cmap(ir_arr, threshold=30):
+
+    ir_arr_n = normalize_ir(ir_arr)
+    ir_arr_n = ir_arr_n.astype(np.uint8)
+    arr_3ch = cv2.cvtColor(ir_arr_n, cv2.COLOR_GRAY2BGR)
+    
+    ir_arr_n = cv2.applyColorMap(ir_arr_n, cv2.COLORMAP_JET)
+
+    mask = ir_arr<threshold
+    mask = np.stack(3*[mask], axis=-1)
+
+    return np.where(mask, arr_3ch, ir_arr_n)
 
 # def compose_gray_ir(gray, ir, ir_opacity=0.5):
     
@@ -231,7 +241,6 @@ def camera_loop():
         # gray_arr_3ch = cv2.cvtColor(gray_arr, cv2.COLOR_GRAY2BGR)
 
         ir_arr = ir_processing(ir_arr)
-        ir_arr_n = normalize_ir(ir_arr)
 
         # face detection
         detections = detect_faces_haar(gray_arr, face_cascade, eye_cascade)
@@ -244,11 +253,14 @@ def camera_loop():
         rgb_arr = overlay_bboxes(rgb_arr, detections, temps)
         # composed_arr = compose_vis_ir(rgb_arr, ir_arr_n)
 
-        cv2.imshow(APP_NAME, rgb_arr)
-        cv2.imshow("IR", ir_arr_n)
+        ir_cmap = apply_cmap(ir_arr)
+
+        cv2.imshow("RGB view", rgb_arr)
+        cv2.imshow("IR view", ir_cmap)
         cv2.waitKey(1)
 
-        saving_executor.submit(cv2.imwrite, f"frames/{i:05d}.jpg", rgb_arr)
+        saving_executor.submit(cv2.imwrite, f"frames_rgb/{i:05d}.jpg", rgb_arr)
+        saving_executor.submit(cv2.imwrite, f"frames_ir/{i:05d}.jpg", ir_cmap)
  
         delay = round(time.monotonic()-t, 2)
         print(f"Loop FPS {1/delay}")
