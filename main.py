@@ -59,14 +59,14 @@ class HeatmapClient(Node):
 def ir_processing(ir_arr):
 
     ir_arr = cv2.resize(ir_arr, SIZE)  # upscale
-    ir_arr[ir_arr < 33] = 0  # clip at 30deg C
-    ir_arr_normalized = cv2.normalize(
-        ir_arr, None, 0, 255, cv2.NORM_MINMAX
-    )  # normalize to 0-255
+    # ir_arr[ir_arr < 30] = 0  # clip at 30deg C
+
+    return ir_arr
+
+def normalize_ir(ir_arr):
+    ir_arr_normalized = cv2.normalize(ir_arr, None, 0, 255, cv2.NORM_MINMAX)  # normalize to 0-255
     ir_arr_normalized = ir_arr_normalized.astype(np.uint8)  # convert to uint8
-
     return ir_arr_normalized
-
 
 def rgb_processing(rgb_arr):
     # RGB processing
@@ -100,43 +100,83 @@ def detect_faces_haar(gray_arr, face_clf, eye_clf):
 
     return detections
 
-def overlay_bboxes(rgb_arr, detections):
+def ctof(deg_c):
+    return 1.8*deg_c + 32
 
-    for (face, eyes) in detections:
+def overlay_bboxes(rgb_arr, detections, temps):
+
+    for (face, eyes), temp in zip(detections, temps):
 
         print(face)
         x, y, w, h = face
 
         # draw face bounding box
         cv2.rectangle(rgb_arr, (x, y), (x + w, y + h), FACE_BB_COLOR, 2)
+
+        deg_c = round(temp['face'], 2)
+        deg_f = round(ctof(temp['face']), 2)
+
+        # draw facial temperature
+        cv2.putText(
+            rgb_arr,
+            text=f"{deg_c} deg C {deg_f} deg F",
+            org=(x,y),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=1.5,
+            color=(255, 255, 255),
+            thickness=2
+        )
+
         roi = rgb_arr[y : y + h, x : x + w]
 
-        for (ex, ey, ew, eh) in eyes:
+        for (ex, ey, ew, eh), eye_t in zip(eyes, temp['eyes']):
             # draw eye bouding box
             cv2.rectangle(roi, (ex, ey), (ex + ew, ey + eh), EYES_BB_COLOR, 2)
+            print(eye_t)
 
     return rgb_arr
 
-
-def compose_gray_ir(gray, ir, ir_opacity=0.5):
+def get_temps(ir_arr, detections):
     
-    blue = gray
-    red = ir
-    green = np.zeros_like(blue)
-    red = np.zeros_like(blue)
+    temps = []
 
-    composed_arr = np.stack([blue, green, red], axis=-1)
+    for (face, eyes) in detections:
 
-    return composed_arr
+        x, y, w, h = face
+        roi_face = ir_arr[y : y + h, x : x + w]
 
-def compose_vis_ir(vis, ir, ir_opacity=0.5):
+        temp = {'face': roi_face.mean(), 'eyes': []}
+        
+        for (ex, ey, ew, eh) in eyes:
+            roi_eye = roi_face[ey : ey + eh, ex : ex + ew]
+            print(roi_eye)
+            temp['eyes'].append(roi_eye.mean())
+
+        temps.append(temp)
+
+    return temps
+
+# def compose_gray_ir(gray, ir, ir_opacity=0.5):
     
-    vis = vis.astype(np.uint32)
-    vis[:,:,2] += ir 
-    vis[vis>255] = 255
-    vis = vis.astype(np.uint8)
+#     blue = gray
+#     red = ir
+#     green = np.zeros_like(blue)
+#     red = np.zeros_like(blue)
 
-    return vis
+#     composed_arr = np.stack([blue, green, red], axis=-1)
+
+#     return composed_arr
+
+def compose_vis_ir(vis_arr, ir_arr, ir_opacity=0.5):
+    
+    # Avoiding overflow in unsigned ints.
+    # There probably is a better way
+    vis_arr = vis_arr.astype(np.uint32)
+    vis_arr[:,:,2] += ir_arr 
+    vis_arr[vis_arr>255] = 255
+    vis_arr = vis_arr.astype(np.uint8)
+
+    return vis_arr
 
 def images_bad(rgb_arr, ir_arr):
     bad = False
@@ -188,26 +228,30 @@ def camera_loop():
         # preprocessing
         rgb_arr = rgb_processing(rgb_arr)
         gray_arr = cv2.cvtColor(rgb_arr, cv2.COLOR_BGR2GRAY)
-        gray_arr_3ch = cv2.cvtColor(gray_arr, cv2.COLOR_GRAY2BGR)
+        # gray_arr_3ch = cv2.cvtColor(gray_arr, cv2.COLOR_GRAY2BGR)
+
         ir_arr = ir_processing(ir_arr)
+        ir_arr_n = normalize_ir(ir_arr)
 
         # face detection
         detections = detect_faces_haar(gray_arr, face_cascade, eye_cascade)
 
+        # get temperatures
+        temps = get_temps(ir_arr, detections)
+        print(temps)
+
         # bbox overlay
-        gray_arr_3ch = overlay_bboxes(gray_arr_3ch, detections)
+        rgb_arr = overlay_bboxes(rgb_arr, detections, temps)
+        # composed_arr = compose_vis_ir(rgb_arr, ir_arr_n)
 
-        # gray_arr = detect_faces(gray_arr, face_cascade) # No eyes
-
-        composed_arr = compose_vis_ir(gray_arr_3ch, ir_arr)
-
-        cv2.imshow(APP_NAME, composed_arr)
+        cv2.imshow(APP_NAME, rgb_arr)
+        cv2.imshow("IR", ir_arr_n)
         cv2.waitKey(1)
 
-        saving_executor.submit(cv2.imwrite, f"frames/{i:05d}.jpg", composed_arr)
+        saving_executor.submit(cv2.imwrite, f"frames/{i:05d}.jpg", rgb_arr)
  
-        delay = time.monotonic()-t
-        print(f"Loop FPS {int(1/delay)}")
+        delay = round(time.monotonic()-t, 2)
+        print(f"Loop FPS {1/delay}")
 
     # cleanup
     cap.release()
@@ -219,7 +263,7 @@ if __name__ == "__main__":
     SIZE = (1024, 768)
     APP_NAME = "Crowd Thermometer"
     FACE_BB_COLOR = (255, 255, 255) # white
-    EYES_BB_COLOR = (255, 255, 0) # yellow
+    EYES_BB_COLOR = (0,   255, 255) # yellow
 
     rclpy.init(args=None)
 
@@ -235,7 +279,6 @@ if __name__ == "__main__":
     t = Thread()
     t.run = executor.spin
     t.start()
-
 
     # Frame saver 
     saving_executor = ThreadPoolExecutor(max_workers=1)
