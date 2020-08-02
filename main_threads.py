@@ -11,7 +11,11 @@ from vis import GPUThread
 def exit_handler():
     print("exit handler called")
     gpu_thread.stop()
+    ir_thread.stop()
+    
     gpu_thread.join()
+    ir_thread.join()
+    
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
