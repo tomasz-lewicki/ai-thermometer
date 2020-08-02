@@ -7,6 +7,8 @@ import numpy as np
 
 import time
 
+import ir
+
 class GPUThread(Thread):
 
     def __init__(self, stream):
@@ -19,22 +21,22 @@ class GPUThread(Thread):
         self._delay = -1
         self._detections = None
         self._running = True
-        self.frame = None
+        self._frame = None
 
     def run(self):
 
         while self._running:
             loop_start = time.monotonic()
-            ret, self.frame = stream.read()
-            # ret, frame = self._stream.retrieve()
+            ret, self._frame = stream.read()
+            # ret, _frame = self._stream.retrieve()
             if ret is False:
                 print("WARN: no frame")
-                time.sleep(.1)
+                time.sleep(1)
                 continue
 
             # detect
             blob = cv2.dnn.blobFromImage(
-                cv2.resize(self.frame, (300, 300)),
+                cv2.resize(self._frame, (300, 300)),
                 1.0,
                 (300, 300),
                 (104.0, 177.0, 123.0)
@@ -44,17 +46,23 @@ class GPUThread(Thread):
 
             self._detections = np.squeeze(detections)
             self._delay = 1000*(time.monotonic()-loop_start)
+        
+        self._stream.release()
 
 
     def get_faces(self):
         """
-        :ret list of x,y positions of faces in image frame:
+        :ret list of x,y positions of faces in image _frame:
         """
 
         return self._detections
 
     def stop(self):
         self._running = False
+
+    @property
+    def frame():
+        return self._frame
 
 # class CameraThread(Thread):
 
@@ -65,20 +73,23 @@ class GPUThread(Thread):
 #         super(CameraThread, self).__init__()
 
 #         self._running = True
-#         self._frame_queue = Queue(maxsize=2)
+#         self.__frame_queue = Queue(maxsize=2)
 #         self._stream = stream
         
 
 
 #     def read(self):
-#         return self._frame_queue.pop()
+#         return self.__frame_queue.pop()
 
 
 #     def run(self):
 
 #         while self._running:
 #             ret, arr = self._stream.read()
-#             self._frame_queue.push(arr)
+#             self.__frame_queue.push(arr)
+
+
+
 
 def gstreamer_pipeline(
     capture_width=3264,
@@ -136,13 +147,14 @@ if __name__ == "__main__":
     while True:
         time.sleep(.05)
 
-        if gpu_thread.frame is None:
+        if gpu_thread._frame is None:
             print("Waiting for frames")
+            time.sleep(1)
             continue
         else:
             print(f"GPU thread delay={gpu_thread._delay:.2f}")
         
-        cv2.imshow("Frame", gpu_thread.frame)
+        cv2.imshow("_frame", gpu_thread._frame)
         key = cv2.waitKey(1) & 0xFF
         
         # if the `q` key was pressed, break from the loop
