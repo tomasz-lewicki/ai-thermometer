@@ -1,24 +1,8 @@
-# Basic visualization (without any radiometry):
-
-Likely, you do not need any 
-
-```shell
-gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=UYVY ! videoscale ! video/x-raw,width=800,height=600 ! videoconvert ! ximagesink
-```
-
-We can also do some simple 
-To record footage from both IR and RGB cameras at the same time, do:
-```shell
-bash deploy_rgb.sh & bash deploy_ir.sh ; fg
-```
-
-To combine the footage, do:
-```shell
-bash combine_ir_rgb.sh
-```
 
 
-However, the stock uvc driver will not allow to access the raw data from the camera. We will require a custom libuvc from https://github.com/groupgets/libuvc
+# Installation (detailed)
+
+First, we will require a custom libuvc from https://github.com/groupgets/libuvc
 
 1. Compile the modified libuvc
 
@@ -31,25 +15,25 @@ cmake ..
 make
 ```
 
-2. Copy the resulting __libuvc.so__ file to this repo
+Copy the resulting __libuvc.so__ file to this repo
 ```
 cp ~/tmp/libuvc/build/libuvc.so ~/crowd-thermometer/
 ```
 
-3. Install OpenCV
+2. Install OpenCV
 ```
 sudo apt-get install python-opencv
 ```
 
-4. Install ROS2
+3. Install ROS2
 
 https://index.ros.org/doc/ros2/Installation/
 
-5. Install jetson-inference
+4. Install jetson-inference
 
 https://github.com/dusty-nv/jetson-inference
 
-6. Make sure your user has r/w access to the camera. 
+5. Make sure your user has r/w access to the camera. 
 
 For a quick and dirty solution do:
 
@@ -82,3 +66,4 @@ export QT_X11_NO_MITSHM=1
 
 2. /dev/video* permissions
 
+source /opt/ros/dashing/setup.bash
