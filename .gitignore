@@ -144,3 +144,4 @@ static
 *.mp4
 output/
 *.jpg
+vis/caffe
