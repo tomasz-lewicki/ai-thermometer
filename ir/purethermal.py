@@ -7,6 +7,7 @@ import cv2, time, jsonpickle
 from libuvc_wrapper import *
 from utils import ktoc
 
+
 def uvc_init(ctx):
     res = libuvc.uvc_init(byref(ctx), 0)
     if res < 0:
@@ -184,6 +185,8 @@ class IRCam(Thread):
         self._stream.release()
         self._running = False
 
+q = Queue(2) # not ideal, but q must be global for the callback function to have access to it
+
 if __name__ == "__main__":
     
     # example usage
@@ -192,7 +195,6 @@ if __name__ == "__main__":
     dev = POINTER(uvc_device)()
     devh = POINTER(uvc_device_handle)()
 
-    q = Queue(2)
     p = start_pt2(dev, devh, ctx, q)
 
     try:
