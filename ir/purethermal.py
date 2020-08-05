@@ -5,7 +5,7 @@ import cv2, time, jsonpickle
 
 # IR camera
 from .libuvc_wrapper import *
-from .utils import ktoc
+from .utils import ktoc, resize, normalize, crop_telemetry
 
 
 def uvc_init(ctx):
@@ -136,30 +136,31 @@ def setup():
     return ctx, dev, devh, ctrl
 
 class IRThread(Thread):
-    def __init__(self, bufsize=2):
+    def __init__(self, bufsize=2, resize_to=(800,600)):
         super(IRThread, self).__init__()
         
         self._ctx = POINTER(uvc_context)()
         self._dev = POINTER(uvc_device)()
         self._devh = POINTER(uvc_device_handle)()
+        self._cb_ptr = start_pt2(self._dev, self._devh, self._ctx, q)
 
-        self._cb_ptr = start_pt2(self._dev, self._devh, self._ctx, self._q)
-        self._running = True
-
+        self._resize_to = resize_to
         self._frame_raw = None
         self._frame_upscaled = None
         self._frame_normalized = None
+
+        self._running = True
 
     def run(self):
         try:
             while self._running:
                 # get frame
                 frame = q.get(True, 500)
-
+                
                 # processing
                 frame = crop_telemetry(frame)
                 # frame = ktoc(frame)
-                upscaled = resize(frame, size=self._size)
+                upscaled = resize(frame, size=self._resize_to)
                 normalized = normalize(upscaled)
 
                 # save members
@@ -168,12 +169,12 @@ class IRThread(Thread):
                 self._frame_normalized = normalized
 
         finally:
-            self.exit_handler()
+            self._exit_handler()
 
-    def exit_handler(self):
+    def _exit_handler(self):
         libuvc.uvc_stop_streaming(self._devh)
         libuvc.uvc_unref_device(self._dev)
-        libuvc.uvc_exit(selfctx)
+        libuvc.uvc_exit(self._ctx)
 
 
     @property
@@ -182,7 +183,6 @@ class IRThread(Thread):
         return self._frame_normalized 
 
     def stop(self):
-        self._stream.release()
         self._running = False
 
 q = Queue(2) # not ideal, but q must be global for the callback function to have access to it

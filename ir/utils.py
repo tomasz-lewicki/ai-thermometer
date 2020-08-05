@@ -1,3 +1,7 @@
+import cv2
+import numpy as np
+
+
 def ktoc(val):
     # Kelvin to Celsius
     return (val - 27315) / 100.0
