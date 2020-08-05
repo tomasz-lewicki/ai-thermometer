@@ -197,13 +197,8 @@ if __name__ == "__main__":
 
     try:
         while True:
-            print("getting")
             data = q.get(True, 500)
-            print("got")
-            if data is None:
-                print("data none")
-            else:
-                print(ktoc(data))
+            print(ktoc(data))
     finally:
         libuvc.uvc_stop_streaming(devh)
         libuvc.uvc_unref_device(dev)
