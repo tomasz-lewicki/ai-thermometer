@@ -27,7 +27,6 @@ if __name__ == "__main__":
     ir_thread = IRThread()
     ir_thread.start()
 
-
     try:
         while gpu_thread.frame is None:
             print("Waiting for RGB frames")
@@ -39,8 +38,7 @@ if __name__ == "__main__":
 
         # main loop
         while True:
-            time.sleep(.05)
-
+            time.sleep(.04) # run main thread at ~20Hz
             print(f"GPU thread latency={gpu_thread._delay:.2f}")
             cv2.imshow("VIS frame", gpu_thread.frame)
             cv2.imshow("IR frame", ir_thread.frame)
@@ -54,9 +52,5 @@ if __name__ == "__main__":
         exit_handler()
 
 
-
-    # ct = CameraThread(stream)
-
-    # ct.start()
 
 
