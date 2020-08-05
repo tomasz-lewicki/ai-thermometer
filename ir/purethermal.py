@@ -4,8 +4,8 @@ import numpy as np
 import cv2, time, jsonpickle
 
 # IR camera
-from libuvc_wrapper import *
-from utils import ktoc
+from .libuvc_wrapper import *
+from .utils import ktoc
 
 
 def uvc_init(ctx):
@@ -135,7 +135,7 @@ def setup():
 
     return ctx, dev, devh, ctrl
 
-class IRCam(Thread):
+class IRThread(Thread):
     def __init__(self, bufsize=2):
         super(IRThread, self).__init__()
         
@@ -206,5 +206,3 @@ if __name__ == "__main__":
         libuvc.uvc_unref_device(dev)
         libuvc.uvc_exit(ctx)
 
-
-    # ircam = IRCam()
