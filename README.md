@@ -1,9 +1,12 @@
-# Demo (click on images to watch the video)
+# Demo 
 
 ## Version 0.3: ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
-Coming soon.
+
+Coming soon!
 
 ## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
+Click to watch the video:
+
 [![Watch the video](https://img.youtube.com/vi/j9eo9Cs8J8I/hqdefault.jpg)](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
 
 
@@ -18,7 +21,7 @@ Click to watch the video:
 # Installation 
 
 Prerequisites:
-- OpenCV 4.4+ (you will likely have to compile it yourself)
+- OpenCV 4.4+ (you likely have an older version and will have to compile it yourself)
 
 ```shell
 git clone https://github.com/tomek-l/ai-thermometer
