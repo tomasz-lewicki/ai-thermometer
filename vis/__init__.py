@@ -1,7 +1,7 @@
 from threading import Thread
-import cv2
-import time
+import time, os
 import numpy as np
+import cv2
 
 def imx219_pipeline(
     capture_width=3264,
@@ -50,7 +50,13 @@ class GPUThread(Thread):
     def __init__(self, stream=make_vis_stream()):
 
         super(GPUThread, self).__init__()
-        self._net = cv2.dnn.readNetFromCaffe("deploy.prototxt.txt", "res10_300x300_ssd_iter_140000.caffemodel")
+
+        parent_dir_pth = os.path.dirname(os.path.abspath(__file__)) 
+        prototxt_file_pth = parent_dir_pth + "/caffe/deploy.prototxt.txt"
+        caffe_model_pth = parent_dir_pth + "/caffe/res10_300x300_ssd_iter_140000.caffemodel"
+
+
+        self._net = cv2.dnn.readNetFromCaffe(prototxt_file_pth, caffe_model_pth)
         self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
         self._net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
         self._stream = stream
