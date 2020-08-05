@@ -3,7 +3,7 @@
 Prerequisites:
 - OpenCV 4.4+ (you will likely have to compile it yourself)
 
-```
+```shell
 git clone https://github.com/tomek-l/ai-thermometer
 pip3 install -r requirements.txt
 export DISPLAY=:0.0 # (if accessing remotely)
