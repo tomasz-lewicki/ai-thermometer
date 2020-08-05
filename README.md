@@ -1,3 +1,20 @@
+# Demo (click on images to watch the video)
+
+## Version 0.3: ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
+Coming soon.
+
+## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
+[![Watch the video](https://img.youtube.com/vi/j9eo9Cs8J8I/maxresdefault.jpg)](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
+
+
+## Version 0.1: SSD (COCO) + FLIR Lepton 3.5 temp. measurement (~12FPS w/ GPU accel.)
+Click to watch the video:
+
+[![Watch the video](https://img.youtube.com/vi/i2XMtshdjn8/maxresdefault.jpg)](https://www.youtube.com/watch?v=i2XMtshdjn8)
+
+
+
+
 # Installation 
 
 Prerequisites:
@@ -24,3 +41,5 @@ cmake ..
 make
 cp libuvc.so ~/ai-thermometer/ir/libuvc_wrapper
 ```
+
+
