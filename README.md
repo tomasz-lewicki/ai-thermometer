@@ -4,7 +4,7 @@
 Coming soon.
 
 ## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
-[![Watch the video](https://img.youtube.com/vi/j9eo9Cs8J8I/maxresdefault.jpg)](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
+[![Watch the video](https://img.youtube.com/vi/j9eo9Cs8J8I/hqdefault.jpg)](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
 
 
 ## Version 0.1: SSD (COCO) + FLIR Lepton 3.5 temp. measurement (~12FPS w/ GPU accel.)
