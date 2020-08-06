@@ -61,7 +61,7 @@ def draw_boxes(arr, detections):
 		)
 
 if __name__ == "__main__":
-	net = cv2.dnn.readNetFromCaffe("deploy.prototxt.txt", "res10_300x300_ssd_iter_140000.caffemodel")
+	net = cv2.dnn.readNetFromCaffe("caffe/deploy.prototxt.txt", "caffe/res10_300x300_ssd_iter_140000.caffemodel")
 	net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
 	net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
