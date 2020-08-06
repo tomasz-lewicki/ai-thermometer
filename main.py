@@ -22,7 +22,8 @@ def exit_handler():
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-
+    
+    MAIN_MIN_LATENCY = 1/20 # run main thread at ~20Hz
 
     gpu_thread = GPUThread()
     gpu_thread.start()
@@ -41,10 +42,7 @@ if __name__ == "__main__":
 
         # main loop
         while True:
-            time.sleep(.04) # run main thread at ~20Hz
-
-            print(f"GPU thread latency={gpu_thread._delay:.2f}")
-
+            time_start = time.monotonic()
 
             ir_frame_w_overlay = overlay_ir_bboxes(ir_thread.frame, ir_thread.bboxes)
             vis_frame_w_overlay = overlay_vis_bboxes(gpu_thread.frame, gpu_thread.detections)
@@ -57,6 +55,15 @@ if __name__ == "__main__":
             # if the `q` key was pressed in the cv2 window, break from the loop
             if key == ord("q"):
                 break
+
+
+
+            main_latency =  time.monotonic() - time_start
+            print(f"GPU thread latency={gpu_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}")
+            
+            time.sleep(max(0, MAIN_MIN_LATENCY - main_latency))
+
+
 
     finally:
         exit_handler()

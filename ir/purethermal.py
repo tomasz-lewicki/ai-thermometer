@@ -151,11 +151,13 @@ class IRThread(Thread):
         self._frame_upscaled = None
         self._frame_normalized = None
         self._bboxes = None
+        self._latency = -1.0
         self._running = True
 
     def run(self):
         try:
             while self._running:
+                start_time = time.monotonic()
                 # get frame
                 frame = q.get(True, 500)
                 
@@ -175,6 +177,8 @@ class IRThread(Thread):
                 self._frame_upscaled = upscaled
                 self._frame_normalized = normalized
 
+                self._latency = 1000 * (time.monotonic() - start_time)
+
         finally:
             self._exit_handler()
 
@@ -192,6 +196,10 @@ class IRThread(Thread):
     @property
     def bboxes(self):
         return self._bboxes
+        
+    @property
+    def latency(self):
+        return self._latency
 
     def stop(self):
         self._running = False
