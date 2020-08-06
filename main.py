@@ -8,7 +8,8 @@ import time
 from ir import IRThread
 from vis import GPUThread
 
-from ir.utils import overlay_bboxes
+from ir.utils import overlay_bboxes as overlay_ir_bboxes 
+from vis.utils import draw_boxes as overlay_vis_bboxes 
 
 def exit_handler():
     print("exit handler called")
@@ -44,12 +45,13 @@ if __name__ == "__main__":
 
             print(f"GPU thread latency={gpu_thread._delay:.2f}")
 
-            print(ir_thread.bboxes)
-            frame_w_overlay = overlay_bboxes(ir_thread.frame, ir_thread.bboxes)
+
+            ir_frame_w_overlay = overlay_ir_bboxes(ir_thread.frame, ir_thread.bboxes)
+            vis_frame_w_overlay = overlay_vis_bboxes(gpu_thread.frame, gpu_thread.detections)
 
             # Show
-            cv2.imshow("VIS frame", gpu_thread.frame)
-            cv2.imshow("IR frame", frame_w_overlay)
+            cv2.imshow("VIS frame", vis_frame_w_overlay)
+            cv2.imshow("IR frame", ir_frame_w_overlay)
             key = cv2.waitKey(1) & 0xFF
             
             # if the `q` key was pressed in the cv2 window, break from the loop

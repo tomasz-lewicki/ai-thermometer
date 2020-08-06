@@ -106,3 +106,8 @@ class GPUThread(Thread):
     @property
     def frame(self):
         return self._frame
+
+    @property
+    def detections(self):
+        return self._detections
+        
