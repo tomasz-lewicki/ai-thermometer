@@ -165,8 +165,6 @@ class IRThread(Thread):
                 upscaled = resize(frame, size=self._resize_to)
                 normalized = normalize(upscaled)
 
-
-                print(upscaled)
                 # detections
                 bboxes_all = detect_ir(upscaled, self._thr_temp)
                 bboxes_good = drop_small_bboxes(bboxes_all, min_size=1000)
