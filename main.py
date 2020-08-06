@@ -26,11 +26,19 @@ def exit_handler():
 if __name__ == "__main__":
     
     MAIN_MIN_LATENCY = 1/20 # run main thread at ~20Hz
+
+    DISPLAY = True
+    WIN_SIZE = (800, 600)
+    FACE_BB_COLOR = (255, 255, 255) # white
+    EYES_BB_COLOR = (0,   255, 255) # yellow
     LOG_DIR = "logs"
+
     APP_NAME = "AI Thermometer"
+    IR_WIN_NAME = APP_NAME + ": IR frame"
+    VIS_WIN_NAME = APP_NAME + ": VIS frame" 
 
 
-    gpu_thread = GPUThread()
+    gpu_thread = GPUThread(frame_size=WIN_SIZE)
     gpu_thread.start()
 
     ir_thread = IRThread()
@@ -38,6 +46,10 @@ if __name__ == "__main__":
 
     executor = ThreadPoolExecutor(max_workers=4)
 
+    cv2.namedWindow(VIS_WIN_NAME)
+    cv2.namedWindow(IR_WIN_NAME)
+    cv2.moveWindow(IR_WIN_NAME, WIN_SIZE[0], 0)
+    
     try:
         while gpu_thread.frame is None:
             print("Waiting for RGB frames")
@@ -56,8 +68,8 @@ if __name__ == "__main__":
             vis_frame_w_overlay = overlay_vis_bboxes(gpu_thread.frame, gpu_thread.detections)
 
             # Show
-            cv2.imshow(APP_NAME + ": VIS frame", vis_frame_w_overlay)
-            cv2.imshow(APP_NAME + ": IR frame", ir_frame_w_overlay)
+            cv2.imshow(VIS_WIN_NAME, vis_frame_w_overlay)
+            cv2.imshow(IR_WIN_NAME, ir_frame_w_overlay)
             key = cv2.waitKey(1) & 0xFF
 
             # Save frames
