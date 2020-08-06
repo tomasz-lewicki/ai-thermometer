@@ -31,13 +31,13 @@ def imx219_pipeline(
         )
     )
 
-def make_vis_stream():
+def make_vis_stream(display_width=1088, display_height=816):
 
     pipeline = imx219_pipeline(
         capture_width=3264,
         capture_height=2464,
-        display_width=1088,
-        display_height=816,
+        display_width=display_width,
+        display_height=display_height,
         framerate=21,
         flip_method=2,
     )
@@ -47,7 +47,7 @@ def make_vis_stream():
 
 class GPUThread(Thread):
 
-    def __init__(self, stream=make_vis_stream()):
+    def __init__(self, stream=None, frame_size=(1088, 816)):
 
         super(GPUThread, self).__init__()
 
@@ -55,6 +55,8 @@ class GPUThread(Thread):
         prototxt_file_pth = parent_dir_pth + "/caffe/deploy.prototxt.txt"
         caffe_model_pth = parent_dir_pth + "/caffe/res10_300x300_ssd_iter_140000.caffemodel"
 
+        if stream is None:
+            stream = make_vis_stream(*frame_size)
 
         self._net = cv2.dnn.readNetFromCaffe(prototxt_file_pth, caffe_model_pth)
         self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
