@@ -2,20 +2,18 @@
 
 ## Version 0.3: ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
 
-Coming soon!
+Video coming soon!
 
 ## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
-Click to watch the video:
+Watch full video: [https://www.youtube.com/watch?v=j9eo9Cs8J8I](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
 
-[![Watch the video](https://img.youtube.com/vi/j9eo9Cs8J8I/hqdefault.jpg)](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
+![](docs/images/haar/combined_short.gif)
 
 
 ## Version 0.1: SSD (COCO) + FLIR Lepton 3.5 temp. measurement (~12FPS w/ GPU accel.)
-Click to watch the video:
+Watch full video: [https://www.youtube.com/watch?v=i2XMtshdjn8](https://www.youtube.com/watch?v=i2XMtshdjn8)
 
-[![Watch the video](https://img.youtube.com/vi/i2XMtshdjn8/maxresdefault.jpg)](https://www.youtube.com/watch?v=i2XMtshdjn8)
-
-
+![](docs/images/ssd/ssd_short.gif)
 
 
 # Installation 
