@@ -5,7 +5,7 @@ import cv2, time, jsonpickle
 
 # IR camera
 from .libuvc_wrapper import *
-from .utils import ktoc, resize, normalize, crop_telemetry
+from .utils import ktoc, resize, normalize, crop_telemetry, detect_ir, drop_small_bboxes
 
 
 def uvc_init(ctx):
@@ -136,7 +136,7 @@ def setup():
     return ctx, dev, devh, ctrl
 
 class IRThread(Thread):
-    def __init__(self, bufsize=2, resize_to=(800,600)):
+    def __init__(self, bufsize=2, resize_to=(800,600), thr_temp=28):
         super(IRThread, self).__init__()
         
         self._ctx = POINTER(uvc_context)()
@@ -144,11 +144,13 @@ class IRThread(Thread):
         self._devh = POINTER(uvc_device_handle)()
         self._cb_ptr = start_pt2(self._dev, self._devh, self._ctx, q)
 
+        self._thr_temp = thr_temp
         self._resize_to = resize_to
+
         self._frame_raw = None
         self._frame_upscaled = None
         self._frame_normalized = None
-
+        self._bboxes = None
         self._running = True
 
     def run(self):
@@ -159,12 +161,19 @@ class IRThread(Thread):
                 
                 # processing
                 frame = crop_telemetry(frame)
-                # frame = ktoc(frame)
+                frame = ktoc(frame) # 16-bit Kelvin to deg C
                 upscaled = resize(frame, size=self._resize_to)
                 normalized = normalize(upscaled)
 
+
+                print(upscaled)
+                # detections
+                bboxes_all = detect_ir(upscaled, self._thr_temp)
+                bboxes_good = drop_small_bboxes(bboxes_all, min_size=1000)
+
                 # save members
                 self._frame_raw = frame
+                self._bboxes = bboxes_good
                 self._frame_upscaled = upscaled
                 self._frame_normalized = normalized
 
@@ -181,6 +190,10 @@ class IRThread(Thread):
     def frame(self):
         # TODO: add locks
         return self._frame_normalized 
+    
+    @property
+    def bboxes(self):
+        return self._bboxes
 
     def stop(self):
         self._running = False
