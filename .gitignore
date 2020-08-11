@@ -145,3 +145,5 @@ static
 output/
 *.jpg
 vis/caffe
+*.mkv
+
