@@ -1,7 +1,7 @@
 from threading import Thread
 from queue import Queue
 import numpy as np
-import cv2, time, jsonpickle
+import cv2, time
 
 # IR camera
 from .libuvc_wrapper import *
