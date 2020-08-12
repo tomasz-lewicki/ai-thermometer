@@ -59,8 +59,13 @@ class GPUThread(Thread):
             stream = make_vis_stream(*frame_size)
 
         self._net = cv2.dnn.readNetFromCaffe(prototxt_file_pth, caffe_model_pth)
-        self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-        self._net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
+        if hasattr(cv2.dnn, 'DNN_BACKEND_CUDA'):
+            self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+            self._net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+        else:
+            print("cv2.dnn.DNN_BACKEND_CUDA not available!")
+            
         self._stream = stream
         self._delay = -1
         self._detections = None
