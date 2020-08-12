@@ -18,8 +18,22 @@ Watch full video: [https://www.youtube.com/watch?v=i2XMtshdjn8](https://www.yout
 
 # Installation 
 
-Prerequisites:
-- OpenCV 4.4+ (you likely have an older version and will have to compile it yourself)
+Make sure you have the newest Nvidia JetPack to avoid issues.
+
+1. Update package manager
+
+```shell
+sudo apt update && sudo apt upgrade
+```
+
+2. You will need OpenCV 4.4+ for CUDA DNN support. Install it with [this script](https://github.com/mdegans/nano_build_opencv/blob/master/build_opencv.sh):
+
+```shell
+wget https://raw.githubusercontent.com/mdegans/nano_build_opencv/master/build_opencv.sh
+./build_opencv.sh
+```
+
+3. Install AI Thermometer
 
 ```shell
 git clone https://github.com/tomek-l/ai-thermometer
