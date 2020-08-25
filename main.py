@@ -13,6 +13,48 @@ from vis import GPUThread
 from ir.utils import overlay_bboxes as overlay_ir_bboxes 
 from vis.utils import draw_boxes as overlay_vis_bboxes 
 
+from flask import Flask, Response, render_template
+
+def rgb_gen():
+    while True:
+        (success, encoded_image) = cv2.imencode(".jpg", vis_frame_w_overlay)
+
+        if not success:
+            continue
+
+        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + \
+            bytearray(encoded_image) + b'\r\n')
+
+def ir_gen():
+    while True:
+        (success, encoded_image) = cv2.imencode(".jpg", ir_frame_w_overlay)
+
+        if not success:
+            continue
+
+        yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + \
+            bytearray(encoded_image) + b'\r\n')
+
+def make_flask_app():
+
+    app = Flask(__name__)
+
+    @app.route("/")
+    def main_view():
+        return render_template("main.html")
+
+    @app.route("/ir")
+    def ir_feed():
+        return Response(ir_gen(),
+            mimetype = "multipart/x-mixed-replace; boundary=frame")
+
+    @app.route("/rgb")
+    def rgb_feed():
+        return Response(rgb_gen(),
+            mimetype = "multipart/x-mixed-replace; boundary=frame")
+
+    return app
+
 def exit_handler():
     print("exit handler called")
     gpu_thread.stop()
@@ -20,12 +62,16 @@ def exit_handler():
     
     gpu_thread.join()
     ir_thread.join()
+
+    # flask_thread.stop()
+    app.do_teardown_appcontext()
+    flask_thread.join()
     
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     
-    MAIN_MIN_LATENCY = 1/20 # run main thread at ~20Hz
+    MAIN_MIN_LATENCY = 1/20 # cap the main thread at 20Hz
 
     DISPLAY = True
     WIN_SIZE = (800, 600)
@@ -37,15 +83,26 @@ if __name__ == "__main__":
     IR_WIN_NAME = APP_NAME + ": IR frame"
     VIS_WIN_NAME = APP_NAME + ": VIS frame" 
 
-
+    # GPU Thread
     gpu_thread = GPUThread(frame_size=WIN_SIZE)
     gpu_thread.start()
 
-    ir_thread = IRThread()
+    # IR processing thread
+    ir_thread = IRThread(resize_to=WIN_SIZE, thr_temp=30)
     ir_thread.start()
 
+    # Used for saving images
     executor = ThreadPoolExecutor(max_workers=4)
 
+    # Webserver
+    app = make_flask_app()
+    flask_thread = Thread(target=app.run, kwargs = {"host": "0.0.0.0","port": 9000,"debug": True, "threaded": True, "use_reloader": False})
+    flask_thread.start()
+
+    vis_frame_w_overlay = None
+    ir_frame_w_overlay = None
+
+    # X-server interface
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
     cv2.moveWindow(IR_WIN_NAME, WIN_SIZE[0], 0)
