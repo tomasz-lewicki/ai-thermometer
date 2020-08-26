@@ -43,9 +43,19 @@ python3 main.py
 ```
 
 # Possible issues:
-- Make sure your user has r/w access to the camera device. 
-- the provided  ```libuvc.so``` is compiled for AArch64. It is a custom version of libuvc that supports Y16 video format.
-If you're using different architecture, you will need to build the library from source:
+## Make sure your user has r/w access to the camera device. 
+
+For a quick and dirty solution do:
+```shell
+echo 'SUBSYSTEM=="usb",  ENV{DEVTYPE}=="usb_device", GROUP="plugdev", MODE="0664"' | sudo tee /etc/udev/rules.d/10-libuvc.rules 
+sudo udevadm trigger
+```
+(this gives camera access to all users)
+
+For a better, fine-grained permission setup, create a new group, give permissions to that group only and your user to the newly created group. You can read more [here](http://wiki.ros.org/libuvc_camera#Permissions).
+
+## The provided  ```libuvc.so``` is compiled for AArch64.
+It is a custom version of libuvc that supports Y16 video format. If you're using different architecture, you will need to build the library from source:
 
 ```shell
 git clone https://github.com/groupgets/libuvc
