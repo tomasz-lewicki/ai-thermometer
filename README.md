@@ -33,12 +33,17 @@ wget https://raw.githubusercontent.com/mdegans/nano_build_opencv/master/build_op
 ./build_opencv.sh
 ```
 
-3. Install AI Thermometer
+3. Download AI Thermometer
 
 ```shell
 git clone https://github.com/tomek-l/ai-thermometer
-pip3 install -r requirements.txt
-export DISPLAY=:0.0 # (if accessing remotely)
+cd ai-thermometer
+```
+
+4. Run AI Thermometer
+
+```shell
+export DISPLAY=:0 # (if accessing via ssh). It might also be DISPLAY=:1
 python3 main.py
 ```
 
