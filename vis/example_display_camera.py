@@ -45,9 +45,10 @@ if __name__ == "__main__":
         cv2.CAP_GSTREAMER,
     )
 
-    for i in range(10):
+    while True:
         ret_val, rgb_arr = cap.read()
         cv2.imshow("show jetson", rgb_arr)
+        cv2.waitKey(1)
 
     cap.release()
     cv2.destroyAllWindows()
