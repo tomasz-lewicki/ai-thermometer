@@ -28,6 +28,7 @@ if __name__ == "__main__":
     MAIN_MIN_LATENCY = 1/20 # cap main loop execution at 20Hz 
 
     DISPLAY = True
+    SAVE_FRAMES = False
     WIN_SIZE = (800, 600)
     FACE_BB_COLOR = (255, 255, 255) # white
     EYES_BB_COLOR = (0,   255, 255) # yellow
@@ -44,7 +45,8 @@ if __name__ == "__main__":
     ir_thread = IRThread()
     ir_thread.start()
 
-    executor = ThreadPoolExecutor(max_workers=4)
+    if SAVE_FRAMES:
+        executor = ThreadPoolExecutor(max_workers=4)
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
@@ -73,8 +75,9 @@ if __name__ == "__main__":
             key = cv2.waitKey(1) & 0xFF
 
             # Save frames
-            executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", vis_frame_w_overlay)
-            executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.jpg", ir_frame_w_overlay)
+            if SAVE_FRAMES:
+                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", vis_frame_w_overlay)
+                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.jpg", ir_frame_w_overlay)
             
             # if the `q` key was pressed in the cv2 window, break from the loop
             if key == ord("q"):
