@@ -25,7 +25,7 @@ def exit_handler():
 
 if __name__ == "__main__":
     
-    MAIN_MIN_LATENCY = 1/20 # run main thread at ~20Hz
+    MAIN_MIN_LATENCY = 1/20 # cap main loop execution at 20Hz 
 
     DISPLAY = True
     WIN_SIZE = (800, 600)
