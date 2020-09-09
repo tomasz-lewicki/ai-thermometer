@@ -165,7 +165,7 @@ class IRThread(Thread):
                 frame = crop_telemetry(frame)
                 frame = ktoc(frame) # 16-bit Kelvin to deg C
                 upscaled = resize(frame, size=self._resize_to)
-                normalized = normalize(upscaled)
+                normalized = normalize(upscaled.copy())
 
                 # detections
                 bboxes_all = detect_ir(upscaled, self._thr_temp)
@@ -192,6 +192,13 @@ class IRThread(Thread):
     def frame(self):
         # TODO: add locks
         return self._frame_normalized 
+
+    @property
+    def temperatures(self, upscaled=True):
+        if upscaled:
+            return self._frame_upscaled
+        else:
+            return self._frame_raw
     
     @property
     def bboxes(self):
