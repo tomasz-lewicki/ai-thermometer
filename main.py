@@ -48,6 +48,7 @@ if __name__ == "__main__":
     MAIN_MIN_LATENCY = 1 / 20  # run main thread at ~20Hz
 
     DISPLAY = True
+    SAVE_FRAMES = False
     WIN_SIZE = (600, 450)
     FACE_BB_COLOR = (255, 255, 255)  # white
     EYES_BB_COLOR = (0, 255, 255)  # yellow
@@ -63,7 +64,8 @@ if __name__ == "__main__":
     ir_thread = IRThread(resize_to=WIN_SIZE)
     ir_thread.start()
 
-    executor = ThreadPoolExecutor(max_workers=4)
+    if SAVE_FRAMES:
+        executor = ThreadPoolExecutor(max_workers=4)
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
