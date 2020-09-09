@@ -13,8 +13,6 @@ from queue import Queue
 # IR camera
 from libuvc_wrapper import *
 
-import jsonpickle # to parse numpy array
-
 BUF_SIZE = 2
 q = Queue(BUF_SIZE)
 
