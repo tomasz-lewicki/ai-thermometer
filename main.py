@@ -103,8 +103,9 @@ if __name__ == "__main__":
             key = cv2.waitKey(1) & 0xFF
 
             # Save frames
-            executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr_o)
-            executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.jpg", ir_arr)
+            if SAVE_FRAMES:
+                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr_o)
+                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.jpg", ir_arr)
 
             # if the `q` key was pressed in the cv2 window, break from the loop
             if key == ord("q"):
