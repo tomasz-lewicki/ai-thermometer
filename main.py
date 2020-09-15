@@ -9,8 +9,7 @@ import time
 from ir import IRThread
 from vis import GPUThread
 
-from ir.utils import overlay_bboxes as overlay_ir_bboxes
-from vis.utils import draw_boxes as overlay_vis_bboxes, overlay_temps
+from ui import make_ir_view, make_rgb_view
 
 import numpy as np
 
@@ -91,20 +90,20 @@ if __name__ == "__main__":
             rgb_arr = gpu_thread.frame
             dets = gpu_thread.detections
 
-            rgb_arr_o = overlay_vis_bboxes(rgb_arr, dets)
-            ir_arr_o = overlay_temps(rgb_arr, ir_arr, dets, temps)
+            rgb_view = make_rgb_view(rgb_arr, dets)
+            ir_view = make_ir_view(rgb_arr, ir_arr, dets, temps)
 
             # draw rectangle to show the approx. IR overlay on VIS frame
-            draw_rectangle(rgb_arr_o)
+            draw_rectangle(rgb_view)
 
             # Show
-            cv2.imshow(VIS_WIN_NAME, rgb_arr_o)
-            cv2.imshow(IR_WIN_NAME, ir_arr_o)
+            cv2.imshow(VIS_WIN_NAME, rgb_view)
+            cv2.imshow(IR_WIN_NAME, ir_view)
             key = cv2.waitKey(1) & 0xFF
 
             # Save frames
             if SAVE_FRAMES:
-                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr_o)
+                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr)
                 executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.jpg", ir_arr)
 
             # if the `q` key was pressed in the cv2 window, break from the loop
