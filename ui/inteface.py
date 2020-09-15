@@ -102,8 +102,8 @@ def make_ir_view(rgb_arr, ir_arr, detections, temperatures):
         # draw box
         cv2.rectangle(ir_arr_3ch, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-        roi = temperatures[x1:x2, y1:y2]
-        temp = np.mean(roi[roi > 32])
+        roi = temperatures[y1:y2, x1:x2]
+        temp = np.nanmean(roi[roi > 32])
 
         # put text
         cv2.putText(
