@@ -58,6 +58,7 @@ if __name__ == "__main__":
     APP_NAME = "AI Thermometer"
     IR_WIN_NAME = APP_NAME + ": IR frame"
     VIS_WIN_NAME = APP_NAME + ": VIS frame"
+    MAX_FILE_QUEUE = 12
 
     gpu_thread = GPUThread(frame_size=FRAME_SIZE)
     gpu_thread.start()
@@ -105,8 +106,11 @@ if __name__ == "__main__":
 
             # Save frames
             if SAVE_FRAMES:
-                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr)
-                executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.jpg", ir_arr)
+                if executor._work_queue.qsize() > MAX_FILE_QUEUE:
+                    print("Error: Too many files in file queue. Not saving frames from this iteration.")
+                else:
+                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr)
+                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_arr)
 
             # if the `q` key was pressed in the cv2 window, break from the loop
             if key == ord("q"):

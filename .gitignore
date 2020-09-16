@@ -147,3 +147,4 @@ output/
 vis/caffe
 *.mkv
 
+logs/
