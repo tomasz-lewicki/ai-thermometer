@@ -14,7 +14,9 @@ def make_rgb_view(arr, detections, win_size):
     scores = detections[:, 2]
 
     # loop over the detections
-    for (_, _, score, x1, y1, x2, y2) in detections[scores > 0.2]: #TODO: put the thresholding outside 
+    for (_, _, score, x1, y1, x2, y2) in detections[
+        scores > 0.2
+    ]:  # TODO: put the thresholding outside
 
         # scale box
         box = np.array([x1, y1, x2, y2]) * np.array([w, h, w, h])
@@ -38,10 +40,14 @@ def make_rgb_view(arr, detections, win_size):
 
     return arr
 
+
 def normalize_ir(ir_arr):
-    ir_arr_normalized = cv2.normalize(ir_arr, None, 0, 255, cv2.NORM_MINMAX)  # normalize to 0-255
+    ir_arr_normalized = cv2.normalize(
+        ir_arr, None, 0, 255, cv2.NORM_MINMAX
+    )  # normalize to 0-255
     ir_arr_normalized = ir_arr_normalized.astype(np.uint8)  # convert to uint8
     return ir_arr_normalized
+
 
 def apply_cmap(ir_arr, threshold=36):
 
@@ -51,16 +57,18 @@ def apply_cmap(ir_arr, threshold=36):
 
     ir_arr_n = cv2.applyColorMap(ir_arr_n, cv2.COLORMAP_JET)
 
-    mask = ir_arr<threshold
-    mask = np.stack(3*[mask], axis=-1)
+    mask = ir_arr < threshold
+    mask = np.stack(3 * [mask], axis=-1)
 
     return np.where(mask, arr_3ch, ir_arr_n)
 
+
 def ctof(c):
-    f = (c * 9/5) + 32
+    f = (c * 9 / 5) + 32
     return f
 
-def make_gyr_cmap(temps_arr, thr=[30,36,36]):
+
+def make_gyr_cmap(temps_arr, thr=[30, 36, 36]):
     """
     make heatmap colorized with blue, yellow and red according to following thresholds
     """
@@ -70,20 +78,22 @@ def make_gyr_cmap(temps_arr, thr=[30,36,36]):
     yellow_mask = np.logical_and(temps_arr > thr[1], temps_arr < thr[2])
     red_mask = temps_arr > thr[2]
 
-    hmap[green_mask] = (0,255,0) # green
-    hmap[yellow_mask] = (0,255,255) # yellow
-    hmap[red_mask] = (0,0,255) # red
-    
+    hmap[green_mask] = (0, 255, 0)  # green
+    hmap[yellow_mask] = (0, 255, 255)  # yellow
+    hmap[red_mask] = (0, 0, 255)  # red
+
     return hmap
+
 
 def make_bin_cmap(temps_arr, thr=36):
     """
     colorize with red above thr
     """
     hmap = np.zeros((*temps_arr.shape[:2], 3), dtype=np.uint8)
-    hmap[temps_arr > thr] = (0,0,255) # red
-    
+    hmap[temps_arr > thr] = (0, 0, 255)  # red
+
     return hmap
+
 
 def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size):
 
@@ -109,7 +119,9 @@ def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size):
     scores = detections[:, 2]
 
     # loop over the detections
-    for (_, _, score, x1, y1, x2, y2) in detections[scores > 0.2]: #TODO: adjustable threshold
+    for (_, _, score, x1, y1, x2, y2) in detections[
+        scores > 0.2
+    ]:  # TODO: adjustable threshold
 
         # TODO: interface should only receive the detections after transform!
         # box in euclidean rgb frame
