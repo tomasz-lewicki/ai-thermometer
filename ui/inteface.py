@@ -3,10 +3,12 @@ import cv2
 from .transforms import img2euc, euc2img, shift
 
 
-def make_rgb_view(arr, detections):
+def make_rgb_view(arr, detections, win_size):
 
     if detections is None:
         return arr
+
+    arr = cv2.resize(arr, win_size)
 
     h, w = arr.shape[:2]
     scores = detections[:, 2]
@@ -54,11 +56,49 @@ def apply_cmap(ir_arr, threshold=36):
 
     return np.where(mask, arr_3ch, ir_arr_n)
 
+def ctof(c):
+    f = (c * 9/5) + 32
+    return f
 
-def make_ir_view(rgb_arr, ir_arr, detections, temperatures):
+def make_gyr_cmap(temps_arr, thr=[30,36,36]):
+    """
+    make heatmap colorized with blue, yellow and red according to following thresholds
+    """
+    hmap = np.zeros((*temps_arr.shape[:2], 3), dtype=np.uint8)
+
+    green_mask = np.logical_and(temps_arr > thr[0], temps_arr < thr[1])
+    yellow_mask = np.logical_and(temps_arr > thr[1], temps_arr < thr[2])
+    red_mask = temps_arr > thr[2]
+
+    hmap[green_mask] = (0,255,0) # green
+    hmap[yellow_mask] = (0,255,255) # yellow
+    hmap[red_mask] = (0,0,255) # red
+    
+    return hmap
+
+def make_bin_cmap(temps_arr, thr=36):
+    """
+    colorize with red above thr
+    """
+    hmap = np.zeros((*temps_arr.shape[:2], 3), dtype=np.uint8)
+    hmap[temps_arr > thr] = (0,0,255) # red
+    
+    return hmap
+
+def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size):
 
     # scaling width, scaling height
     SW, SH = 0.5, 0.5
+
+    ir_arr = cv2.resize(ir_arr, win_size)
+    temps_arr = cv2.resize(temps_arr, win_size)
+
+    # 1ch -> 3ch
+    ir_arr = cv2.cvtColor(ir_arr, cv2.COLOR_GRAY2BGR)
+
+    # hmap = make_gyr_cmap(temps_arr)
+    hmap = make_bin_cmap(temps_arr, thr=36)
+    ir_arr = cv2.addWeighted(ir_arr, 0.5, hmap, 0.5, 0)
 
     if detections is None:
         return ir_arr
@@ -67,8 +107,6 @@ def make_ir_view(rgb_arr, ir_arr, detections, temperatures):
     h_ir, w_ir = ir_arr.shape[:2]
 
     scores = detections[:, 2]
-
-    ir_arr_3ch = apply_cmap(temperatures)
 
     # loop over the detections
     for (_, _, score, x1, y1, x2, y2) in detections[scores > 0.2]: #TODO: adjustable threshold
@@ -100,15 +138,15 @@ def make_ir_view(rgb_arr, ir_arr, detections, temperatures):
         (x1, y1, x2, y2) = box.astype("int")
 
         # draw box
-        cv2.rectangle(ir_arr_3ch, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv2.rectangle(ir_arr, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-        roi = temperatures[y1:y2, x1:x2]
+        roi = temps_arr[y1:y2, x1:x2]
         temp = np.nanmean(roi[roi > 32])
 
         # put text
         cv2.putText(
-            ir_arr_3ch,
-            f"{temp:.2f} C",
+            ir_arr,
+            f"{temp:.2f} C {ctof(temp):.2f} F",
             (x1, y1 - 10 if y1 > 20 else y1 + 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,
@@ -116,4 +154,4 @@ def make_ir_view(rgb_arr, ir_arr, detections, temperatures):
             2,
         )
 
-    return ir_arr_3ch
+    return ir_arr
