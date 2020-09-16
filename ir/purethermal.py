@@ -147,9 +147,11 @@ class IRThread(Thread):
         self._thr_temp = thr_temp
         self._resize_to = resize_to
 
-        self._frame_raw = None
-        self._frame_upscaled = None
-        self._frame_normalized = None
+        self._raw = None
+        self._arr_c = None
+        self._arr_c_big = None
+        self._arr_n = None
+
         self._bboxes = None
         self._latency = -1.0
         self._running = True
@@ -159,23 +161,19 @@ class IRThread(Thread):
             while self._running:
                 start_time = time.monotonic()
                 # get frame
-                frame = q.get(True, 500)
+                raw = q.get(True, 500)
+                raw = crop_telemetry(raw)
                 
                 # processing
-                frame = crop_telemetry(frame)
-                frame = ktoc(frame) # 16-bit Kelvin to deg C
-                upscaled = resize(frame, size=self._resize_to)
-                normalized = normalize(upscaled.copy())
+                arr_c = ktoc(raw) # 16-bit Kelvin to deg C
+                arr_c_big = resize(arr_c, size=self._resize_to)
+                arr_n = normalize(arr_c_big.copy())
 
-                # detections
-                bboxes_all = detect_ir(upscaled, self._thr_temp)
-                bboxes_good = drop_small_bboxes(bboxes_all, min_size=1000)
-
-                # save members
-                self._frame_raw = frame
-                self._bboxes = bboxes_good
-                self._frame_upscaled = upscaled
-                self._frame_normalized = normalized
+                # Save memebers
+                self._raw = raw
+                self._arr_c = arr_c
+                self._arr_c_big = arr_c_big
+                self._arr_n = arr_n
 
                 self._latency = 1000 * (time.monotonic() - start_time)
 
@@ -187,18 +185,24 @@ class IRThread(Thread):
         libuvc.uvc_unref_device(self._dev)
         libuvc.uvc_exit(self._ctx)
 
-
     @property
-    def frame(self):
-        # TODO: add locks
-        return self._frame_normalized 
+    def raw(self):
+        return self._raw
 
     @property
     def temperatures(self, upscaled=True):
         if upscaled:
-            return self._frame_upscaled
+            return self._arr_c_big
         else:
-            return self._frame_raw
+            return self._arr_c
+
+    @property
+    def frame(self):
+        """
+        returns an uint8 array normalized between 0-255
+        """
+        # TODO: add locks
+        return self._arr_n
     
     @property
     def bboxes(self):

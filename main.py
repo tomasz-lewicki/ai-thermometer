@@ -49,8 +49,8 @@ if __name__ == "__main__":
     DISPLAY = True
     SAVE_FRAMES = True
     # WIN_SIZE = (600, 450)
-    FRAME_SIZE = (1280, 1024)
     WIN_SIZE = (400, 300)
+    FRAME_SIZE = (1280, 1024)
     FACE_BB_COLOR = (255, 255, 255)  # white
     EYES_BB_COLOR = (0, 255, 255)  # yellow
     LOG_DIR = "logs"
@@ -87,6 +87,7 @@ if __name__ == "__main__":
 
             time_start = time.monotonic()
 
+            ir_raw = ir_thread.raw
             ir_arr = ir_thread.frame
             temps = ir_thread.temperatures
 
@@ -109,8 +110,8 @@ if __name__ == "__main__":
                 if executor._work_queue.qsize() > MAX_FILE_QUEUE:
                     print("Error: Too many files in file queue. Not saving frames from this iteration.")
                 else:
-                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_arr)
-                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_arr)
+                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view)
+                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view)
 
             # if the `q` key was pressed in the cv2 window, break from the loop
             if key == ord("q"):
