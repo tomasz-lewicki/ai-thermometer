@@ -47,8 +47,10 @@ if __name__ == "__main__":
     MAIN_MIN_LATENCY = 1 / 20  # run main thread at ~20Hz
 
     DISPLAY = True
-    SAVE_FRAMES = False
-    WIN_SIZE = (600, 450)
+    SAVE_FRAMES = True
+    # WIN_SIZE = (600, 450)
+    FRAME_SIZE = (1280, 1024)
+    WIN_SIZE = (400, 300)
     FACE_BB_COLOR = (255, 255, 255)  # white
     EYES_BB_COLOR = (0, 255, 255)  # yellow
     LOG_DIR = "logs"
@@ -57,10 +59,10 @@ if __name__ == "__main__":
     IR_WIN_NAME = APP_NAME + ": IR frame"
     VIS_WIN_NAME = APP_NAME + ": VIS frame"
 
-    gpu_thread = GPUThread(frame_size=WIN_SIZE)
+    gpu_thread = GPUThread(frame_size=FRAME_SIZE)
     gpu_thread.start()
 
-    ir_thread = IRThread(resize_to=WIN_SIZE)
+    ir_thread = IRThread(resize_to=FRAME_SIZE)
     ir_thread.start()
 
     if SAVE_FRAMES:
@@ -68,7 +70,7 @@ if __name__ == "__main__":
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
-    cv2.moveWindow(IR_WIN_NAME, 0, WIN_SIZE[1])
+    cv2.moveWindow(IR_WIN_NAME, WIN_SIZE[0], 0)
 
     try:
         while gpu_thread.frame is None:
@@ -90,8 +92,8 @@ if __name__ == "__main__":
             rgb_arr = gpu_thread.frame
             dets = gpu_thread.detections
 
-            rgb_view = make_rgb_view(rgb_arr, dets)
-            ir_view = make_ir_view(rgb_arr, ir_arr, dets, temps)
+            rgb_view = make_rgb_view(rgb_arr, dets, WIN_SIZE)
+            ir_view = make_ir_view(rgb_arr, ir_arr, dets, temps, WIN_SIZE)
 
             # draw rectangle to show the approx. IR overlay on VIS frame
             draw_rectangle(rgb_view)
