@@ -89,6 +89,62 @@ def setup_display(display_addr):
     cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[1], 0)
 
 
+def mainloop():
+    # main loop
+    for i in itertools.count(start=0, step=1):
+
+        time_start = time.monotonic()
+
+        ir_raw = ir_thread.raw
+        ir_arr = ir_thread.frame
+        temps = ir_thread.temperatures
+
+        rgb_arr = gpu_thread.frame
+        dets = gpu_thread.detections
+
+        rgb_view = make_rgb_view(
+            rgb_arr, dets, VIS_WIN_SIZE, bb_color=VIS_BBOX_COLOR
+        )
+
+        ir_view = make_ir_view(
+            rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
+        )
+
+        # draw rectangle to show the approx. IR overlay on VIS frame
+        draw_rectangle(rgb_view)
+
+        # Show
+        if SHOW_DISPLAY:
+            cv2.imshow(VIS_WIN_NAME, rgb_view)
+            cv2.imshow(IR_WIN_NAME, ir_view)
+            key = cv2.waitKey(1) & 0xFF
+
+            # if the `q` key was pressed in the cv2 window, break from the loop
+            if key == ord("q"):
+                break
+
+        # Save frames
+        if SAVE_FRAMES:
+            if executor._work_queue.qsize() > MAX_FILE_QUEUE:
+                print(
+                    "Error: Too many files in file queue. Not saving frames from this iteration."
+                )
+            else:
+                executor.submit(
+                    cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view
+                )
+                executor.submit(
+                    cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view
+                )
+
+        main_latency = time.monotonic() - time_start
+        print(
+            f"GPU thread latency={gpu_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
+        )
+
+        time.sleep(max(0, 1 / HZ_CAP - main_latency))
+
+
 if __name__ == "__main__":
 
     (
@@ -128,59 +184,7 @@ if __name__ == "__main__":
             print("Waiting for IR frames")
             time.sleep(1)
 
-        # main loop
-        for i in itertools.count(start=0, step=1):
-
-            time_start = time.monotonic()
-
-            ir_raw = ir_thread.raw
-            ir_arr = ir_thread.frame
-            temps = ir_thread.temperatures
-
-            rgb_arr = gpu_thread.frame
-            dets = gpu_thread.detections
-
-            rgb_view = make_rgb_view(
-                rgb_arr, dets, VIS_WIN_SIZE, bb_color=VIS_BBOX_COLOR
-            )
-
-            ir_view = make_ir_view(
-                rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
-            )
-
-            # draw rectangle to show the approx. IR overlay on VIS frame
-            draw_rectangle(rgb_view)
-
-            # Show
-            if SHOW_DISPLAY:
-                cv2.imshow(VIS_WIN_NAME, rgb_view)
-                cv2.imshow(IR_WIN_NAME, ir_view)
-                key = cv2.waitKey(1) & 0xFF
-
-                # if the `q` key was pressed in the cv2 window, break from the loop
-                if key == ord("q"):
-                    break
-
-            # Save frames
-            if SAVE_FRAMES:
-                if executor._work_queue.qsize() > MAX_FILE_QUEUE:
-                    print(
-                        "Error: Too many files in file queue. Not saving frames from this iteration."
-                    )
-                else:
-                    executor.submit(
-                        cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view
-                    )
-                    executor.submit(
-                        cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view
-                    )
-
-            main_latency = time.monotonic() - time_start
-            print(
-                f"GPU thread latency={gpu_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
-            )
-
-            time.sleep(max(0, 1 / HZ_CAP - main_latency))
+        mainloop()
 
     finally:
         exit_handler()
