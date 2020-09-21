@@ -3,7 +3,7 @@ import cv2
 from .transforms import img2euc, euc2img, shift
 
 
-def make_rgb_view(arr, detections, win_size):
+def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
 
     if detections is None:
         return arr
@@ -25,16 +25,16 @@ def make_rgb_view(arr, detections, win_size):
         (x1, y1, x2, y2) = box.astype("int")
 
         # draw box
-        cv2.rectangle(arr, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv2.rectangle(arr, (x1, y1), (x2, y2), bb_color, 2)
 
         # put text
         cv2.putText(
             arr,
-            f"{score*100:.2f}",
+            f"face: {round(score*100,0):2.0f}%",
             (x1, y1 - 10 if y1 > 20 else y1 + 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,
-            (0, 0, 255),
+            bb_color,
             2,
         )
 
@@ -85,7 +85,7 @@ def make_gyr_cmap(temps_arr, thr=[30, 36, 36]):
     return hmap
 
 
-def make_bin_cmap(temps_arr, thr=36):
+def make_bin_cmap(temps_arr, thr=37):
     """
     colorize with red above thr
     """
@@ -95,7 +95,7 @@ def make_bin_cmap(temps_arr, thr=36):
     return hmap
 
 
-def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size):
+def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size, bb_color=(255,0,0)):
 
     # scaling width, scaling height
     SW, SH = 0.5, 0.5
@@ -150,7 +150,7 @@ def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size):
         (x1, y1, x2, y2) = box.astype("int")
 
         # draw box
-        cv2.rectangle(ir_arr, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv2.rectangle(ir_arr, (x1, y1), (x2, y2), bb_color, 2)
 
         roi = temps_arr[y1:y2, x1:x2]
         temp = np.nanmean(roi[roi > 32])
@@ -162,7 +162,7 @@ def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size):
             (x1, y1 - 10 if y1 > 20 else y1 + 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.45,
-            (0, 0, 255),
+            bb_color,
             2,
         )
 

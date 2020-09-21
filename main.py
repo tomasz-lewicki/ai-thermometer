@@ -28,7 +28,7 @@ def draw_rectangle(arr):
     p1 = tuple(np.array(p1 * s, dtype=np.int))
     p2 = tuple(np.array(p2 * s, dtype=np.int))
 
-    cv2.rectangle(arr, p1, p2, (255, 255, 255), 3)
+    cv2.rectangle(arr, p1, p2, (255, 255, 255), 1)
 
 
 def exit_handler():
@@ -48,17 +48,19 @@ if __name__ == "__main__":
 
     DISPLAY = True
     SAVE_FRAMES = True
+    # WIN_SIZE = (800, 600)
     # WIN_SIZE = (600, 450)
     WIN_SIZE = (400, 300)
     FRAME_SIZE = (1280, 1024)
-    FACE_BB_COLOR = (255, 255, 255)  # white
-    EYES_BB_COLOR = (0, 255, 255)  # yellow
     LOG_DIR = "logs"
 
     APP_NAME = "AI Thermometer"
     IR_WIN_NAME = APP_NAME + ": IR frame"
     VIS_WIN_NAME = APP_NAME + ": VIS frame"
     MAX_FILE_QUEUE = 12
+
+    RGB_BBOX_COLOR = (0, 255, 0)
+    IR_BBOX_COLOR = (0, 255, 0)
 
     gpu_thread = GPUThread(frame_size=FRAME_SIZE)
     gpu_thread.start()
@@ -69,9 +71,10 @@ if __name__ == "__main__":
     if SAVE_FRAMES:
         executor = ThreadPoolExecutor(max_workers=4)
 
-    cv2.namedWindow(VIS_WIN_NAME)
-    cv2.namedWindow(IR_WIN_NAME)
-    cv2.moveWindow(IR_WIN_NAME, WIN_SIZE[0], 0)
+    if DISPLAY:
+        cv2.namedWindow(VIS_WIN_NAME)
+        cv2.namedWindow(IR_WIN_NAME)
+        cv2.moveWindow(IR_WIN_NAME, WIN_SIZE[0], 0)
 
     try:
         while gpu_thread.frame is None:
@@ -94,16 +97,21 @@ if __name__ == "__main__":
             rgb_arr = gpu_thread.frame
             dets = gpu_thread.detections
 
-            rgb_view = make_rgb_view(rgb_arr, dets, WIN_SIZE)
-            ir_view = make_ir_view(rgb_arr, ir_arr, dets, temps, WIN_SIZE)
+            rgb_view = make_rgb_view(rgb_arr, dets, WIN_SIZE, bb_color=RGB_BBOX_COLOR)
+            ir_view = make_ir_view(rgb_arr, ir_arr, dets, temps, WIN_SIZE, bb_color=IR_BBOX_COLOR)
 
             # draw rectangle to show the approx. IR overlay on VIS frame
             draw_rectangle(rgb_view)
 
             # Show
-            cv2.imshow(VIS_WIN_NAME, rgb_view)
-            cv2.imshow(IR_WIN_NAME, ir_view)
-            key = cv2.waitKey(1) & 0xFF
+            if DISPLAY:
+                cv2.imshow(VIS_WIN_NAME, rgb_view)
+                cv2.imshow(IR_WIN_NAME, ir_view)
+                key = cv2.waitKey(1) & 0xFF
+
+                # if the `q` key was pressed in the cv2 window, break from the loop
+                if key == ord("q"):
+                    break
 
             # Save frames
             if SAVE_FRAMES:
@@ -113,9 +121,6 @@ if __name__ == "__main__":
                     executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view)
                     executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view)
 
-            # if the `q` key was pressed in the cv2 window, break from the loop
-            if key == ord("q"):
-                break
 
             main_latency = time.monotonic() - time_start
             print(
