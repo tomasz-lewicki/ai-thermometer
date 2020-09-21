@@ -1,17 +1,53 @@
-from threading import Thread
-from queue import Queue
-from concurrent.futures import ThreadPoolExecutor
 import itertools
+import os
+import time
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
+from threading import Thread
 
 import cv2
-import time
+import numpy as np
 
 from ir import IRThread
+from ui import make_ir_view, make_rgb_view
 from vis import GPUThread
 
-from ui import make_ir_view, make_rgb_view
 
-import numpy as np
+def get_config(file_path=None):
+    HZ_CAP = 20
+    LOG_DIR = "logs"
+    IR_WIN_NAME = "IR view"
+    VIS_WIN_NAME = "RGB view"
+
+    VIS_BBOX_COLOR = (0, 0, 255)  # red
+    IR_BBOX_COLOR = (0, 255, 0)  # green
+
+    IR_WIN_SIZE = (400, 300)
+    VIS_WIN_SIZE = (400, 300)
+
+    SAVE_FRAMES = True
+    SHOW_DISPLAY = True
+    MAX_FILE_QUEUE = 10
+
+    FRAME_SIZE = (1024, 768)
+
+    X_DISPLAY_ADDR = ":0"
+
+    return (
+        HZ_CAP,
+        LOG_DIR,
+        SHOW_DISPLAY,
+        SAVE_FRAMES,
+        MAX_FILE_QUEUE,
+        FRAME_SIZE,
+        IR_WIN_NAME,
+        IR_WIN_SIZE,
+        VIS_WIN_NAME,
+        VIS_WIN_SIZE,
+        X_DISPLAY_ADDR,
+        VIS_BBOX_COLOR,
+        IR_BBOX_COLOR,
+    )
 
 
 def draw_rectangle(arr):
@@ -42,25 +78,34 @@ def exit_handler():
     cv2.destroyAllWindows()
 
 
+def setup_display(display_addr):
+    if os.environ.get("DISPLAY") is None:
+        os.environ["DISPLAY"] = display_addr
+    elif X_DISPLAY_ADDR:
+        print("WARN: Using $DISPLAY from environment, not from config")
+
+    cv2.namedWindow(VIS_WIN_NAME)
+    cv2.namedWindow(IR_WIN_NAME)
+    cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[1], 0)
+
+
 if __name__ == "__main__":
 
-    MAIN_MIN_LATENCY = 1 / 20  # run main thread at ~20Hz
-
-    DISPLAY = True
-    SAVE_FRAMES = True
-    # WIN_SIZE = (800, 600)
-    # WIN_SIZE = (600, 450)
-    WIN_SIZE = (400, 300)
-    FRAME_SIZE = (1280, 1024)
-    LOG_DIR = "logs"
-
-    APP_NAME = "AI Thermometer"
-    IR_WIN_NAME = APP_NAME + ": IR frame"
-    VIS_WIN_NAME = APP_NAME + ": VIS frame"
-    MAX_FILE_QUEUE = 12
-
-    RGB_BBOX_COLOR = (0, 255, 0)
-    IR_BBOX_COLOR = (0, 255, 0)
+    (
+        HZ_CAP,
+        LOG_DIR,
+        SHOW_DISPLAY,
+        SAVE_FRAMES,
+        MAX_FILE_QUEUE,
+        FRAME_SIZE,
+        IR_WIN_NAME,
+        IR_WIN_SIZE,
+        VIS_WIN_NAME,
+        VIS_WIN_SIZE,
+        X_DISPLAY_ADDR,
+        VIS_BBOX_COLOR,
+        IR_BBOX_COLOR,
+    ) = get_config()
 
     gpu_thread = GPUThread(frame_size=FRAME_SIZE)
     gpu_thread.start()
@@ -71,10 +116,8 @@ if __name__ == "__main__":
     if SAVE_FRAMES:
         executor = ThreadPoolExecutor(max_workers=4)
 
-    if DISPLAY:
-        cv2.namedWindow(VIS_WIN_NAME)
-        cv2.namedWindow(IR_WIN_NAME)
-        cv2.moveWindow(IR_WIN_NAME, WIN_SIZE[0], 0)
+    if SHOW_DISPLAY:
+        setup_display(X_DISPLAY_ADDR)
 
     try:
         while gpu_thread.frame is None:
@@ -97,14 +140,19 @@ if __name__ == "__main__":
             rgb_arr = gpu_thread.frame
             dets = gpu_thread.detections
 
-            rgb_view = make_rgb_view(rgb_arr, dets, WIN_SIZE, bb_color=RGB_BBOX_COLOR)
-            ir_view = make_ir_view(rgb_arr, ir_arr, dets, temps, WIN_SIZE, bb_color=IR_BBOX_COLOR)
+            rgb_view = make_rgb_view(
+                rgb_arr, dets, VIS_WIN_SIZE, bb_color=VIS_BBOX_COLOR
+            )
+
+            ir_view = make_ir_view(
+                rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
+            )
 
             # draw rectangle to show the approx. IR overlay on VIS frame
             draw_rectangle(rgb_view)
 
             # Show
-            if DISPLAY:
+            if SHOW_DISPLAY:
                 cv2.imshow(VIS_WIN_NAME, rgb_view)
                 cv2.imshow(IR_WIN_NAME, ir_view)
                 key = cv2.waitKey(1) & 0xFF
@@ -116,18 +164,23 @@ if __name__ == "__main__":
             # Save frames
             if SAVE_FRAMES:
                 if executor._work_queue.qsize() > MAX_FILE_QUEUE:
-                    print("Error: Too many files in file queue. Not saving frames from this iteration.")
+                    print(
+                        "Error: Too many files in file queue. Not saving frames from this iteration."
+                    )
                 else:
-                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view)
-                    executor.submit(cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view)
-
+                    executor.submit(
+                        cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view
+                    )
+                    executor.submit(
+                        cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view
+                    )
 
             main_latency = time.monotonic() - time_start
             print(
                 f"GPU thread latency={gpu_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
             )
 
-            time.sleep(max(0, MAIN_MIN_LATENCY - main_latency))
+            time.sleep(max(0, 1 / HZ_CAP - main_latency))
 
     finally:
         exit_handler()
