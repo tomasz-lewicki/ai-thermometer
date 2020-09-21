@@ -38,6 +38,9 @@ def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
             2,
         )
 
+    # draw rectangle to show the approx. IR overlay on VIS frame
+    draw_rectangle(arr)
+
     return arr
 
 
@@ -67,6 +70,21 @@ def ctof(c):
     f = (c * 9 / 5) + 32
     return f
 
+def draw_rectangle(arr):
+    center = np.array([0.5, 0.5])
+    wh = np.array([0.5, 0.5])
+
+    p1 = np.array([center[0] - wh[0] / 2, center[1] - wh[1] / 2])
+
+    p2 = np.array([center[0] + wh[0] / 2, center[1] + wh[1] / 2])
+
+    # scale it to image size
+    s = np.array(arr.shape[:2][::-1])
+
+    p1 = tuple(np.array(p1 * s, dtype=np.int))
+    p2 = tuple(np.array(p2 * s, dtype=np.int))
+
+    cv2.rectangle(arr, p1, p2, (255, 255, 255), 1)
 
 def make_gyr_cmap(temps_arr, thr=[30, 36, 36]):
     """

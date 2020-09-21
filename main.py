@@ -50,23 +50,6 @@ def get_config(file_path=None):
     )
 
 
-def draw_rectangle(arr):
-    center = np.array([0.5, 0.5])
-    wh = np.array([0.5, 0.5])
-
-    p1 = np.array([center[0] - wh[0] / 2, center[1] - wh[1] / 2])
-
-    p2 = np.array([center[0] + wh[0] / 2, center[1] + wh[1] / 2])
-
-    # scale it to image size
-    s = np.array(arr.shape[:2][::-1])
-
-    p1 = tuple(np.array(p1 * s, dtype=np.int))
-    p2 = tuple(np.array(p2 * s, dtype=np.int))
-
-    cv2.rectangle(arr, p1, p2, (255, 255, 255), 1)
-
-
 def exit_handler():
     print("exit handler called")
     gpu_thread.stop()
@@ -109,9 +92,6 @@ def mainloop():
         ir_view = make_ir_view(
             rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
         )
-
-        # draw rectangle to show the approx. IR overlay on VIS frame
-        draw_rectangle(rgb_view)
 
         # Show
         if SHOW_DISPLAY:
