@@ -8,6 +8,8 @@ def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
     if detections is None:
         return arr
 
+    scale = max(1, win_size[0] // 700)
+
     arr = cv2.resize(arr, win_size)
 
     h, w = arr.shape[:2]
@@ -25,7 +27,7 @@ def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
         (x1, y1, x2, y2) = box.astype("int")
 
         # draw box
-        cv2.rectangle(arr, (x1, y1), (x2, y2), bb_color, 2)
+        cv2.rectangle(arr, (x1, y1), (x2, y2), bb_color, 2*scale)
 
         # put text
         cv2.putText(
@@ -33,7 +35,7 @@ def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
             f"face: {round(score*100,0):2.0f}%",
             (x1, y1 - 10 if y1 > 20 else y1 + 10),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.45,
+            0.45 * scale,
             bb_color,
             2,
         )
