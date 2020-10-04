@@ -2,6 +2,7 @@ from threading import Thread
 import time, os
 import numpy as np
 import cv2
+from .ssd import SsdDetector
 
 
 def imx219_pipeline(
@@ -47,37 +48,6 @@ def make_vis_stream(display_width=1088, display_height=816):
     return cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)
 
 
-class Detector:
-    def __init__(self, prototxt_file_pth, caffe_model_pth):
-
-        self._in_size = (300, 300)
-
-        print("Loading weights from file...")
-        self._net = cv2.dnn.readNetFromCaffe(prototxt_file_pth, caffe_model_pth)
-        print("Weights loaded!")
-
-        if hasattr(cv2.dnn, "DNN_BACKEND_CUDA"):
-            self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-            self._net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-        else:
-            print("cv2.dnn.DNN_BACKEND_CUDA not available!")
-
-        print("Running first net inference...")
-        test_arr = arr = np.ones((768, 1024, 3), dtype=np.uint8)
-        self(test_arr)
-        print("Detector initialized!")
-
-    def __call__(self, arr):
-
-        blob = cv2.dnn.blobFromImage(
-            cv2.resize(arr, self._in_size), 1.0, self._in_size, (104.0, 177.0, 123.0)
-        )
-
-        self._net.setInput(blob)
-        detections = self._net.forward()
-
-        return np.squeeze(detections)
-
 
 class GPUThread(Thread):
     def __init__(self, stream=None, frame_size=(1088, 816)):
@@ -86,10 +56,10 @@ class GPUThread(Thread):
 
         parent_dir_pth = os.path.dirname(os.path.abspath(__file__))
 
-        self._detector = Detector(
-            prototxt_file_pth=parent_dir_pth + "/caffe/deploy.prototxt.txt",
+        self._detector = SsdDetector(
+            prototxt_file_pth=parent_dir_pth + "/ssd/caffe/deploy.prototxt.txt",
             caffe_model_pth=parent_dir_pth
-            + "/caffe/res10_300x300_ssd_iter_140000.caffemodel",
+            + "/ssd/caffe/res10_300x300_ssd_iter_140000.caffemodel",
         )
 
         if stream is None:
