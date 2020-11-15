@@ -1,7 +1,7 @@
-# IR + RGB see
-
+# IR + RGB display simultaneously
+```
 gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2 ! 'video/x-raw,width=800, height=600' ! videoconvert ! ximagesink & gst-launch-1.0 v4l2src device=/dev/video1 ! video/x-raw,format=UYVY ! videoscale ! video/x-raw,width=800,height=600 ! videoconvert ! ximagesink
-
+```
 
 # RGB
 
