@@ -1,10 +1,4 @@
-# Hardware
-
-The hardware design for the AI Thermometer is available at:[https://a360.co/3g8kfqV](https://a360.co/3g8kfqV)
-![wireframe image](docs/images/wireframe.png)
-
-
-# Demo 
+# AI Thermometer for Elevated Temperature Screening
 
 ## ACM SenSys 2020 Demo
 ACM SenSys 2020 demo paper: https://dl.acm.org/doi/10.1145/3384419.3430433 and Video demo: [https://youtu.be/3wAjgFXskrE](https://youtu.be/3wAjgFXskrE)
@@ -26,6 +20,11 @@ numpages = {2},
 location = {Virtual Event, Japan},
 series = {SenSys '20}
 }
+
+## Hardware
+
+The hardware design for the AI Thermometer is available at:[https://a360.co/3g8kfqV](https://a360.co/3g8kfqV)
+![wireframe image](docs/images/wireframe.png)
 
 
 
