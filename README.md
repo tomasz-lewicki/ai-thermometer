@@ -1,3 +1,8 @@
+# Hardware
+
+The hardware design for the AI Thermometer is available at:[https://a360.co/3g8kfqV](https://a360.co/3g8kfqV)
+
+
 # Demo 
 
 ## Version 0.3: ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
