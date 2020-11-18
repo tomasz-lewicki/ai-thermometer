@@ -6,6 +6,29 @@ The hardware design for the AI Thermometer is available at:[https://a360.co/3g8k
 
 # Demo 
 
+## ACM SenSys 2020 Demo
+ACM SenSys 2020 demo paper: https://dl.acm.org/doi/10.1145/3384419.3430433 and Video demo: [https://youtu.be/3wAjgFXskrE](https://youtu.be/3wAjgFXskrE)
+### If you like this project, please cite our work: 
+Tomasz Lewicki and Kaikai Liu. 2020. AI thermometer for temperature screening: demo abstract. In Proceedings of the 18th Conference on Embedded Networked Sensor Systems (SenSys '20). Association for Computing Machinery, New York, NY, USA, 597–598. DOI:https://doi.org/10.1145/3384419.3430433
+#### Latex bibtex citation: 
+@inproceedings{10.1145/3384419.3430433,
+author = {Lewicki, Tomasz and Liu, Kaikai},
+title = {AI Thermometer for Temperature Screening: Demo Abstract},
+year = {2020},
+isbn = {9781450375900},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3384419.3430433},
+doi = {10.1145/3384419.3430433},
+booktitle = {Proceedings of the 18th Conference on Embedded Networked Sensor Systems},
+pages = {597–598},
+numpages = {2},
+location = {Virtual Event, Japan},
+series = {SenSys '20}
+}
+
+
+
 ## Version 0.3: ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
 
 Video coming soon!
