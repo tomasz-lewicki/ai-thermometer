@@ -1,6 +1,7 @@
 # Hardware
 
 The hardware design for the AI Thermometer is available at:[https://a360.co/3g8kfqV](https://a360.co/3g8kfqV)
+![wireframe image](docs/images/wireframe.png)
 
 
 # Demo 
