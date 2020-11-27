@@ -58,6 +58,7 @@ sudo apt update && sudo apt upgrade
 
 ```shell
 wget https://raw.githubusercontent.com/mdegans/nano_build_opencv/master/build_opencv.sh
+chmod +x build_opencv.sh
 ./build_opencv.sh
 ```
 
