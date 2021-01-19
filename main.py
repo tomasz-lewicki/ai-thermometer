@@ -12,43 +12,21 @@ from ir import IRThread
 from ui import make_ir_view, make_rgb_view
 from rgb import GPUThread
 
-
-def get_config(file_path=None):
-    HZ_CAP = 20
-    LOG_DIR = "logs"
-    IR_WIN_NAME = "IR view"
-    VIS_WIN_NAME = "RGB view"
-
-    VIS_BBOX_COLOR = (0, 0, 255)  # red
-    IR_BBOX_COLOR = (0, 255, 0)  # green
-
-    IR_WIN_SIZE = (400, 300)
-    VIS_WIN_SIZE = (400, 300)
-
-    SAVE_FRAMES = True
-    SHOW_DISPLAY = True
-    MAX_FILE_QUEUE = 10
-
-    FRAME_SIZE = (1024, 768)
-
-    X_DISPLAY_ADDR = ":0"
-
-    return (
-        HZ_CAP,
-        LOG_DIR,
-        SHOW_DISPLAY,
-        SAVE_FRAMES,
-        MAX_FILE_QUEUE,
-        FRAME_SIZE,
-        IR_WIN_NAME,
-        IR_WIN_SIZE,
-        VIS_WIN_NAME,
-        VIS_WIN_SIZE,
-        X_DISPLAY_ADDR,
-        VIS_BBOX_COLOR,
-        IR_BBOX_COLOR,
-    )
-
+from config import (
+    HZ_CAP,
+    LOG_DIR,
+    SHOW_DISPLAY,
+    SAVE_FRAMES,
+    MAX_FILE_QUEUE,
+    FRAME_SIZE,
+    IR_WIN_NAME,
+    IR_WIN_SIZE,
+    VIS_WIN_NAME,
+    VIS_WIN_SIZE,
+    X_DISPLAY_ADDR,
+    VIS_BBOX_COLOR,
+    IR_BBOX_COLOR
+)
 
 def exit_handler():
     print("exit handler called")
@@ -126,22 +104,6 @@ def mainloop():
 
 
 if __name__ == "__main__":
-
-    (
-        HZ_CAP,
-        LOG_DIR,
-        SHOW_DISPLAY,
-        SAVE_FRAMES,
-        MAX_FILE_QUEUE,
-        FRAME_SIZE,
-        IR_WIN_NAME,
-        IR_WIN_SIZE,
-        VIS_WIN_NAME,
-        VIS_WIN_SIZE,
-        X_DISPLAY_ADDR,
-        VIS_BBOX_COLOR,
-        IR_BBOX_COLOR,
-    ) = get_config()
 
     gpu_thread = GPUThread(frame_size=FRAME_SIZE)
     gpu_thread.start()
