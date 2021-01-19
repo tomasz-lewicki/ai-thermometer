@@ -30,10 +30,10 @@ from config import (
 
 def exit_handler():
     print("exit handler called")
-    gpu_thread.stop()
+    rgb_thread.stop()
     ir_thread.stop()
 
-    gpu_thread.join()
+    rgb_thread.join()
     ir_thread.join()
 
     cv2.destroyAllWindows()
@@ -60,8 +60,8 @@ def mainloop():
         ir_arr = ir_thread.frame
         temps = ir_thread.temperatures
 
-        rgb_arr = gpu_thread.frame
-        dets = gpu_thread.detections
+        rgb_arr = rgb_thread.frame
+        dets = rgb_thread.detections
 
         rgb_view = make_rgb_view(
             rgb_arr, dets, VIS_WIN_SIZE, bb_color=VIS_BBOX_COLOR
@@ -97,7 +97,7 @@ def mainloop():
 
         main_latency = time.monotonic() - time_start
         print(
-            f"GPU thread latency={gpu_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
+            f"GPU thread latency={rgb_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
         )
 
         time.sleep(max(0, 1 / HZ_CAP - main_latency))
@@ -105,8 +105,8 @@ def mainloop():
 
 if __name__ == "__main__":
 
-    gpu_thread = GPUThread(frame_size=FRAME_SIZE)
-    gpu_thread.start()
+    rgb_thread = GPUThread(frame_size=FRAME_SIZE)
+    rgb_thread.start()
 
     ir_thread = IRThread(resize_to=FRAME_SIZE)
     ir_thread.start()
@@ -118,7 +118,7 @@ if __name__ == "__main__":
         setup_display(X_DISPLAY_ADDR)
 
     try:
-        while gpu_thread.frame is None:
+        while rgb_thread.frame is None:
             print("Waiting for RGB frames")
             time.sleep(1)
 
