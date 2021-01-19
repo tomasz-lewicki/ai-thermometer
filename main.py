@@ -10,7 +10,7 @@ import numpy as np
 
 from ir import IRThread
 from ui import make_ir_view, make_rgb_view
-from vis import GPUThread
+from rgb import GPUThread
 
 
 def get_config(file_path=None):
