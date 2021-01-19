@@ -10,7 +10,7 @@ import numpy as np
 
 from ir import IRThread
 from ui import make_ir_view, make_rgb_view
-from rgb import GPUThread
+from rgb import RGBThread
 
 from config import (
     HZ_CAP,
@@ -97,7 +97,7 @@ def mainloop():
 
         main_latency = time.monotonic() - time_start
         print(
-            f"GPU thread latency={rgb_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
+            f"RGB thread latency={rgb_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
         )
 
         time.sleep(max(0, 1 / HZ_CAP - main_latency))
@@ -105,7 +105,7 @@ def mainloop():
 
 if __name__ == "__main__":
 
-    rgb_thread = GPUThread(frame_size=FRAME_SIZE)
+    rgb_thread = RGBThread(frame_size=FRAME_SIZE)
     rgb_thread.start()
 
     ir_thread = IRThread(resize_to=FRAME_SIZE)

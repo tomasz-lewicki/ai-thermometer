@@ -6,10 +6,10 @@ from .ssd import SsdDetector
 from .camera import make_imx219_capture
 
 
-class GPUThread(Thread):
+class RGBThread(Thread):
     def __init__(self, stream=None, frame_size=(1088, 816)):
 
-        super(GPUThread, self).__init__()
+        super(RGBThread, self).__init__()
 
         parent_dir_pth = os.path.dirname(os.path.abspath(__file__))
 
