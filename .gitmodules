@@ -1,0 +1,6 @@
+[submodule "rgb/retinaface"]
+	path = rgb/retinaface
+	url = https://github.com/tomek-l/retinaface.git
+[submodule "rgb/camera"]
+	path = rgb/camera
+	url = https://github.com/tomek-l/jetson-cameras.git
