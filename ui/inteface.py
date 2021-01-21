@@ -29,7 +29,7 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
             2,
         )
 
-        if landm:
+        if any(landm):
             # convert landmarks to pixel frame
             landm_px = np.array([H, W] * 5) * landm
             landm_px = np.rint(landm_px).astype(np.int)
