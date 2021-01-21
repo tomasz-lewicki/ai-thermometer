@@ -1,6 +1,7 @@
 import itertools
 import os
 import time
+
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from threading import Thread
@@ -9,8 +10,8 @@ import cv2
 import numpy as np
 
 from ir import IRThread
-from ui import make_ir_view, make_rgb_view
 from rgb import RGBThread
+from ui import make_ir_view, make_rgb_view
 
 from config import (
     HZ_CAP,
@@ -18,15 +19,16 @@ from config import (
     SHOW_DISPLAY,
     SAVE_FRAMES,
     MAX_FILE_QUEUE,
-    FRAME_SIZE,
+    FRAME_SIZE,  # TODO: make everything size-independent
     IR_WIN_NAME,
     IR_WIN_SIZE,
     VIS_WIN_NAME,
     VIS_WIN_SIZE,
     X_DISPLAY_ADDR,
     VIS_BBOX_COLOR,
-    IR_BBOX_COLOR
+    IR_BBOX_COLOR,
 )
+
 
 def exit_handler():
     print("exit handler called")
@@ -51,7 +53,7 @@ def setup_display(display_addr):
 
 
 def mainloop():
-    # main loop
+
     for i in itertools.count(start=0, step=1):
 
         time_start = time.monotonic()
@@ -61,15 +63,26 @@ def mainloop():
         temps = ir_thread.temperatures
 
         rgb_arr = rgb_thread.frame
-        dets = rgb_thread.detections
+        scores, boxes, landms = rgb_thread.get_detections()
 
-        rgb_view = make_rgb_view(
-            rgb_arr, dets, VIS_WIN_SIZE, bb_color=VIS_BBOX_COLOR
-        )
+        # only keep detections with confidence above 50%
+        scores = np.array(scores)
+        boxes = np.array(boxes)
+        landms = np.array(landms)
 
-        ir_view = make_ir_view(
-            rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
-        )
+        keep = scores > 0.5
+
+        scores = scores[keep]
+        boxes = boxes[keep]
+        landms = landms[keep]
+
+        rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
+
+        # TODO: fix in new UI
+        ir_view = ir_arr
+        # ir_view = make_ir_view(
+        #     rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
+        # )
 
         # Show
         if SHOW_DISPLAY:
@@ -96,8 +109,13 @@ def mainloop():
                 )
 
         main_latency = time.monotonic() - time_start
+
+        # Quick f-string format specifiers reference:
+        # f'{value:{width}.{precision}}'
         print(
-            f"RGB thread latency={rgb_thread._delay:.2f}    IR thread latency={ir_thread.latency:.2f}      Main thread latency={1000 * main_latency:.2f}"
+            f"RGB thread latency={rgb_thread._delay:6.2f}ms   "
+            f"IR thread latency={ir_thread.latency:6.2f}ms    "
+            f"Main thread latency={1000*main_latency:6.2f}ms"
         )
 
         time.sleep(max(0, 1 / HZ_CAP - main_latency))
@@ -105,7 +123,7 @@ def mainloop():
 
 if __name__ == "__main__":
 
-    rgb_thread = RGBThread(frame_size=FRAME_SIZE)
+    rgb_thread = RGBThread()
     rgb_thread.start()
 
     ir_thread = IRThread(resize_to=FRAME_SIZE)
@@ -117,15 +135,15 @@ if __name__ == "__main__":
     if SHOW_DISPLAY:
         setup_display(X_DISPLAY_ADDR)
 
+    while rgb_thread.frame is None:
+        print("Waiting for RGB frames")
+        time.sleep(1)
+
+    while ir_thread.frame is None:
+        print("Waiting for IR frames")
+        time.sleep(1)
+
     try:
-        while rgb_thread.frame is None:
-            print("Waiting for RGB frames")
-            time.sleep(1)
-
-        while ir_thread.frame is None:
-            print("Waiting for IR frames")
-            time.sleep(1)
-
         mainloop()
 
     finally:
