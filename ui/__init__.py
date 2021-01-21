@@ -1,1 +1,1 @@
-from .inteface import *
+from .interface import *
