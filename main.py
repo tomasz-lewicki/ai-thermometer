@@ -11,7 +11,7 @@ import numpy as np
 
 from ir import IRThread
 from rgb import RGBThread
-from ui import make_ir_view, make_rgb_view
+from ui import make_ir_view, make_rgb_view, make_combined_view
 
 from config import (
     HZ_CAP,
@@ -78,6 +78,9 @@ def mainloop():
 
         rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
 
+        ir_arr_zoomed_out = zoom_out(ir_arr)
+        arr_combined = make_combined_view(rgb_arr, ir_arr_zoomed_out)
+
         # TODO: fix in new UI
         ir_view = ir_arr
         # ir_view = make_ir_view(
@@ -88,6 +91,7 @@ def mainloop():
         if SHOW_DISPLAY:
             cv2.imshow(VIS_WIN_NAME, rgb_view)
             cv2.imshow(IR_WIN_NAME, ir_view)
+            cv2.imshow("Combined", arr_combined)
             key = cv2.waitKey(1) & 0xFF
 
             # if the `q` key was pressed in the cv2 window, break from the loop
@@ -101,6 +105,11 @@ def mainloop():
                     "Error: Too many files in file queue. Not saving frames from this iteration."
                 )
             else:
+                # TODO: catch writing errors due to full SD card
+                # For examlple: libpng error: Write Error
+                # The ret value of imwrite can be obtained from:
+                # future = executor.submit(...)
+                # future.result()
                 executor.submit(
                     cv2.imwrite, f"{LOG_DIR}/frames/{i:05d}-rgb.jpg", rgb_view
                 )
