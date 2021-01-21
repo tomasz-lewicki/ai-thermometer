@@ -16,17 +16,17 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
         x1, y1, x2, y2 = box_px
 
         # draw bounding box
-        cv2.rectangle(arr, (x1, y1), (x2, y2), (255, 255, 255), 2)
+        cv2.rectangle(arr, (x1, y1), (x2, y2), (255, 255, 0), 2)
 
         # draw label
         cv2.putText(
             arr,
-            f"face: {score*100:2.0f}%",
-            (x1, y1 - 10 if y1 > 20 else y1 + 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 0, 255),
-            2,
+            f"conf: {score*100:2.0f}%",
+            org=(x1, y1 - 10 if y1 > 20 else y1 + 10),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.5,
+            color=(255, 255, 0),
+            thickness=1,
         )
 
         if any(landm):
@@ -35,11 +35,11 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
             landm_px = np.rint(landm_px).astype(np.int)
 
             # draw landmarks
-            cv2.circle(arr, (landm_px[0], landm_px[1]), 1, (0, 0, 255), 4)
-            cv2.circle(arr, (landm_px[2], landm_px[3]), 1, (0, 255, 255), 4)
-            cv2.circle(arr, (landm_px[4], landm_px[5]), 1, (255, 0, 255), 4)
-            cv2.circle(arr, (landm_px[6], landm_px[7]), 1, (0, 255, 0), 4)
-            cv2.circle(arr, (landm_px[8], landm_px[9]), 1, (255, 0, 0), 4)
+            cv2.circle(arr, (landm_px[0], landm_px[1]), 1, (0, 255, 0), 2)
+            cv2.circle(arr, (landm_px[2], landm_px[3]), 1, (0, 255, 0), 2)
+            cv2.circle(arr, (landm_px[4], landm_px[5]), 1, (0, 255, 0), 2)
+            cv2.circle(arr, (landm_px[6], landm_px[7]), 1, (0, 255, 0), 2)
+            cv2.circle(arr, (landm_px[8], landm_px[9]), 1, (0, 255, 0), 2)
 
     return arr
 
