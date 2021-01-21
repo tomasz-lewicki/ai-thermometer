@@ -1,47 +1,45 @@
 import numpy as np
 import cv2
-from .transforms import img2euc, euc2img, shift
+from utils.transforms import img2euc, euc2img, shift
 
 
-def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
+def make_rgb_view(arr, scores, boxes, landms, win_size):
 
-    if detections is None:
-        return arr
+    W, H = arr.shape[:2]
+    arr = cv2.resize(arr, (H, W))
 
-    scale = max(1, win_size[0] // 700)
+    for score, box, landm in zip(scores, boxes, landms):
 
-    arr = cv2.resize(arr, win_size)
+        # convert boxes to pixel frame
+        box_px = np.array([H, W, H, W]) * box
+        box_px = np.rint(box_px).astype(np.int)
+        x1, y1, x2, y2 = box_px
 
-    h, w = arr.shape[:2]
-    scores = detections[:, 2]
+        # draw bounding box
+        cv2.rectangle(arr, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
-    # loop over the detections
-    for (_, _, score, x1, y1, x2, y2) in detections[
-        scores > 0.2
-    ]:  # TODO: put the thresholding outside
-
-        # scale box
-        box = np.array([x1, y1, x2, y2]) * np.array([w, h, w, h])
-
-        # cast to int
-        (x1, y1, x2, y2) = box.astype("int")
-
-        # draw box
-        cv2.rectangle(arr, (x1, y1), (x2, y2), bb_color, 2*scale)
-
-        # put text
+        # draw label
         cv2.putText(
             arr,
-            f"face: {round(score*100,0):2.0f}%",
+            f"face: {score*100:2.0f}%",
             (x1, y1 - 10 if y1 > 20 else y1 + 10),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.45 * scale,
-            bb_color,
+            1,
+            (0, 0, 255),
             2,
         )
 
-    # draw rectangle to show the approx. IR overlay on VIS frame
-    draw_rectangle(arr)
+        if landm:
+            # convert landmarks to pixel frame
+            landm_px = np.array([H, W] * 5) * landm
+            landm_px = np.rint(landm_px).astype(np.int)
+
+            # draw landmarks
+            cv2.circle(arr, (landm_px[0], landm_px[1]), 1, (0, 0, 255), 4)
+            cv2.circle(arr, (landm_px[2], landm_px[3]), 1, (0, 255, 255), 4)
+            cv2.circle(arr, (landm_px[4], landm_px[5]), 1, (255, 0, 255), 4)
+            cv2.circle(arr, (landm_px[6], landm_px[7]), 1, (0, 255, 0), 4)
+            cv2.circle(arr, (landm_px[8], landm_px[9]), 1, (255, 0, 0), 4)
 
     return arr
 
@@ -72,6 +70,7 @@ def ctof(c):
     f = (c * 9 / 5) + 32
     return f
 
+
 def draw_rectangle(arr):
     center = np.array([0.5, 0.5])
     wh = np.array([0.5, 0.5])
@@ -87,6 +86,7 @@ def draw_rectangle(arr):
     p2 = tuple(np.array(p2 * s, dtype=np.int))
 
     cv2.rectangle(arr, p1, p2, (255, 255, 255), 1)
+
 
 def make_gyr_cmap(temps_arr, thr=[30, 36, 36]):
     """
@@ -115,10 +115,12 @@ def make_bin_cmap(temps_arr, thr=37):
     return hmap
 
 
-def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size, bb_color=(255,0,0)):
+def make_ir_view(
+    rgb_arr, ir_arr, detections, temps_arr, win_size, bb_color=(255, 0, 0)
+):
 
     # scaling width, scaling height
-    SW, SH = 0.5, 0.5
+    SW, SH = 0.75, 0.75
 
     ir_arr = cv2.resize(ir_arr, win_size)
     temps_arr = cv2.resize(temps_arr, win_size)
