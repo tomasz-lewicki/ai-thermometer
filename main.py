@@ -89,10 +89,10 @@ def mainloop():
                 )
             else:
                 executor.submit(
-                    cv2.imwrite, f"{LOG_DIR}/frames/vis/{i:05d}.jpg", rgb_view
+                    cv2.imwrite, f"{LOG_DIR}/frames/{i:05d}-rgb.jpg", rgb_view
                 )
                 executor.submit(
-                    cv2.imwrite, f"{LOG_DIR}/frames/ir/{i:05d}.png", ir_view
+                    cv2.imwrite, f"{LOG_DIR}/frames/{i:05d}-ir.png", ir_view
                 )
 
         main_latency = time.monotonic() - time_start
