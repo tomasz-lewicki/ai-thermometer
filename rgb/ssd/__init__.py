@@ -1,14 +1,22 @@
+import os
+
 import numpy as np
 import cv2
 
 
 class SsdDetector:
-    def __init__(self, prototxt_file_pth, caffe_model_pth):
+    # TODO: move to detector.py
+    def __init__(self):
 
         self._in_size = (300, 300)
 
-        print("Loading weights from file...")
+        print("Loading SSD weights from file...")
+
+        parent_dir_pth = os.path.dirname(os.path.abspath(__file__))
+        prototxt_file_pth=parent_dir_pth + "/caffe/deploy.prototxt.txt"
+        caffe_model_pth=parent_dir_pth + "/caffe/res10_300x300_ssd_iter_140000.caffemodel"
         self._net = cv2.dnn.readNetFromCaffe(prototxt_file_pth, caffe_model_pth)
+
         print("Weights loaded!")
 
         if hasattr(cv2.dnn, "DNN_BACKEND_CUDA"):
@@ -29,6 +37,11 @@ class SsdDetector:
         )
 
         self._net.setInput(blob)
-        detections = self._net.forward()
+        out = self._net.forward()
+        out = np.squeeze(out) # squeeze batch of 1
 
-        return np.squeeze(detections)
+        scores = out[:,2]
+        boxes = out[:,3:]
+        landms = len(scores) * [None]
+
+        return scores, boxes, landms
