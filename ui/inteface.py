@@ -3,6 +3,29 @@ import cv2
 from utils.transforms import img2euc, euc2img, shift
 
 
+def zoom_out(arr):
+    W, H = arr.shape[:2]
+
+    padded = cv2.copyMakeBorder(
+        img, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=(0, 0, 0)
+    )
+    zoomed_out = cv2.resize(padded, (W, H), interpolation=cv2.INTER_CUBIC)
+
+    return zoomed_out
+
+
+def make_combined_view(rgb_arr, ir_arr):
+
+    # W, H = rgb_arr.shape[:2]
+    a = rgb_arr
+    b = ir_arr
+    b = cv2.cvtColor(ir_arr, cv2.COLOR_GRAY2BGR)
+    # rgb_arr = cv2.resize(b, (W, H))
+    arr = cv2.addWeighted(a, 0.5, b, 0.5, 0)
+
+    return arr
+
+
 def make_rgb_view(arr, scores, boxes, landms, win_size):
 
     W, H = arr.shape[:2]
