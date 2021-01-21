@@ -10,7 +10,7 @@ from .ssd import SsdDetector
 
 
 class RGBThread(Thread):
-    def __init__(self, model="SSD"):
+    def __init__(self, model="retinaface"):
 
         super(RGBThread, self).__init__()
 
