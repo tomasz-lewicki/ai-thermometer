@@ -5,7 +5,6 @@ import cv2
 
 
 class SsdDetector:
-    # TODO: move to detector.py
     def __init__(self):
 
         self._in_size = (300, 300)
