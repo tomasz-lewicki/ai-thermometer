@@ -1,17 +1,6 @@
 import numpy as np
 import cv2
-from utils.transforms import img2euc, euc2img, shift
-
-
-def zoom_out(arr):
-    W, H = arr.shape[:2]
-
-    padded = cv2.copyMakeBorder(
-        img, 100, 100, 100, 100, cv2.BORDER_CONSTANT, value=(0, 0, 0)
-    )
-    zoomed_out = cv2.resize(padded, (W, H), interpolation=cv2.INTER_CUBIC)
-
-    return zoomed_out
+from utils.transforms import img2euc, euc2img, shift, zoom_out
 
 
 def make_combined_view(rgb_arr, ir_arr):
