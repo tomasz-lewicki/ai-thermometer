@@ -41,7 +41,7 @@ def make_rgb_view(arr, detections, win_size, bb_color=(0, 255, 0)):
         )
 
     # draw rectangle to show the approx. IR overlay on VIS frame
-    draw_rectangle(arr)
+    # draw_rectangle(arr)
 
     return arr
 
@@ -118,7 +118,7 @@ def make_bin_cmap(temps_arr, thr=37):
 def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size, bb_color=(255,0,0)):
 
     # scaling width, scaling height
-    SW, SH = 0.5, 0.5
+    SW, SH = 0.9, 0.9
 
     ir_arr = cv2.resize(ir_arr, win_size)
     temps_arr = cv2.resize(temps_arr, win_size)
@@ -155,8 +155,8 @@ def make_ir_view(rgb_arr, ir_arr, detections, temps_arr, win_size, bb_color=(255
         y2 /= SH
 
         # shift left
-        x1, y1 = shift(x1, y1, +0.05, 0)
-        x2, y2 = shift(x2, y2, +0.05, 0)
+        x1, y1 = shift(x1, y1, 0, 0.03)
+        x2, y2 = shift(x2, y2, 0, 0.03)
 
         # convert back to image frame
         x1, y1 = euc2img(x1, y1)
