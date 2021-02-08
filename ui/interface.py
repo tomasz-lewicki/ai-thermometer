@@ -134,7 +134,12 @@ def colormap(arr_temps, thr_min=30, thr_max=40):
 
     # make foreground
     fg = np.clip(arr_temps, thr_min, thr_max)
-    fg = cv2.normalize(fg, None, 0, 255, cv2.NORM_MINMAX)
+
+    # this makes the colormap stretched between thr_min and thr_max
+    # rather than thr_min and fg.max()
+    cmap_max = (fg.max() - thr_min) * 255 / (thr_max - thr_min)
+    fg = cv2.normalize(fg, None, 0, cmap_max, cv2.NORM_MINMAX)
+
     fg = fg.astype(np.uint8)
     fg = cv2.applyColorMap(fg, cv2.COLORMAP_JET)
 
