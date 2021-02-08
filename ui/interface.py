@@ -17,13 +17,13 @@ def make_combined_view(rgb_arr, ir_arr):
 
 def make_rgb_view(arr, scores, boxes, landms, win_size):
 
-    W, H = arr.shape[:2]
-    arr = cv2.resize(arr, (H, W))
+    W,H = win_size
+    arr = cv2.resize(arr, (W, H))
 
     for score, box, landm in zip(scores, boxes, landms):
 
         # convert boxes to pixel frame
-        box_px = np.array([H, W, H, W]) * box
+        box_px = np.array([W, H, W, H]) * box
         box_px = np.rint(box_px).astype(np.int)
         x1, y1, x2, y2 = box_px
 
@@ -43,7 +43,7 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
 
         if any(landm):
             # convert landmarks to pixel frame
-            landm_px = np.array([H, W] * 5) * landm
+            landm_px = np.array([W, H] * 5) * landm
             landm_px = np.rint(landm_px).astype(np.int)
 
             # draw landmarks
@@ -58,14 +58,14 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
 
 def make_ir_view(arr, scores, boxes, landms, win_size, thr_min=32, thr_max=40):
 
-    W, H = arr.shape[:2]
-    arr = cv2.resize(arr, (H, W))
+    W,H = win_size
+    arr = cv2.resize(arr, (W, H))
     arr = colormap(arr, thr_min, thr_max)
 
     for score, box, landm in zip(scores, boxes, landms):
 
         # convert boxes to pixel frame
-        box_px = np.array([H, W, H, W]) * box
+        box_px = np.array([W, H, W, H]) * box
         box_px = np.rint(box_px).astype(np.int)
         x1, y1, x2, y2 = box_px
 
@@ -85,7 +85,7 @@ def make_ir_view(arr, scores, boxes, landms, win_size, thr_min=32, thr_max=40):
 
         if any(landm):
             # convert landmarks to pixel frame
-            landm_px = np.array([H, W] * 5) * landm
+            landm_px = np.array([W, H] * 5) * landm
             landm_px = np.rint(landm_px).astype(np.int)
 
             # draw landmarks
