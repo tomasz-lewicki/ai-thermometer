@@ -189,7 +189,6 @@ class IRThread(Thread):
     def raw(self):
         return self._raw
 
-    @property
     def temperatures(self, upscaled=True):
         if upscaled:
             return self._arr_c_big
