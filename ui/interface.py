@@ -56,10 +56,11 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
     return arr
 
 
-def make_ir_view(arr, scores, boxes, landms, win_size):
+def make_ir_view(arr, scores, boxes, landms, win_size, thr_min=32, thr_max=40):
 
     W, H = arr.shape[:2]
     arr = cv2.resize(arr, (H, W))
+    arr = colormap(arr, thr_min, thr_max)
 
     for score, box, landm in zip(scores, boxes, landms):
 
@@ -97,26 +98,23 @@ def make_ir_view(arr, scores, boxes, landms, win_size):
     return arr
 
 
-def normalize_ir(ir_arr):
-    ir_arr_normalized = cv2.normalize(
-        ir_arr, None, 0, 255, cv2.NORM_MINMAX
-    )  # normalize to 0-255
-    ir_arr_normalized = ir_arr_normalized.astype(np.uint8)  # convert to uint8
-    return ir_arr_normalized
+def colormap(arr_temps, thr_min=30, thr_max=40):
 
+    # make background (a 3channel normalized gray image)
+    bg = cv2.normalize(arr_temps, None, 0, 255, cv2.NORM_MINMAX)
+    bg = bg.astype(np.uint8)
+    bg = cv2.cvtColor(bg, cv2.COLOR_GRAY2BGR)  # 1ch -> 3ch
 
-def apply_cmap(ir_arr, threshold=36):
+    # make foreground
+    fg = np.clip(arr_temps, thr_min, thr_max)
+    fg = cv2.normalize(fg, None, 0, 255, cv2.NORM_MINMAX)
+    fg = fg.astype(np.uint8)
+    fg = cv2.applyColorMap(fg, cv2.COLORMAP_JET)
 
-    ir_arr_n = normalize_ir(ir_arr)
-    ir_arr_n = ir_arr_n.astype(np.uint8)
-    arr_3ch = cv2.cvtColor(ir_arr_n, cv2.COLOR_GRAY2BGR)
-
-    ir_arr_n = cv2.applyColorMap(ir_arr_n, cv2.COLORMAP_JET)
-
-    mask = ir_arr < threshold
+    mask = np.logical_and(arr_temps > thr_min, arr_temps < thr_max)
     mask = np.stack(3 * [mask], axis=-1)
 
-    return np.where(mask, arr_3ch, ir_arr_n)
+    return np.where(mask, fg, bg)
 
 
 def ctof(c):

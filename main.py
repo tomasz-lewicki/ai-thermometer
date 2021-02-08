@@ -62,7 +62,7 @@ def mainloop():
 
         ir_raw = ir_thread.raw
         ir_arr = ir_thread.frame
-        temps = ir_thread.temperatures
+        temp_arr = ir_thread.temperatures
 
         rgb_arr = rgb_thread.frame
         scores, boxes, landms = rgb_thread.get_detections()
@@ -81,7 +81,7 @@ def mainloop():
         boxes_ir = transform_boxes(boxes, 1.1, 1.1, 0, 0)
 
         # Render UI views
-        ir_view = make_ir_view(ir_arr, scores, boxes_ir, landms, IR_WIN_SIZE)
+        ir_view = make_ir_view(temp_arr, scores, boxes_ir, landms, IR_WIN_SIZE)
         rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
         combo_view = rgb_arr  # make_combined_view(rgb_arr, ir_arr)
 
