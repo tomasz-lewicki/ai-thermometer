@@ -78,7 +78,7 @@ def mainloop():
         boxes = boxes[keep]
         landms = landms[keep]
 
-        boxes_ir = transform_boxes(boxes, 0.9, 0.9, 0, 0)
+        boxes_ir = transform_boxes(boxes, 1.1, 1.1, 0, 0)
 
         # Render UI views
         ir_view = make_ir_view(ir_arr, scores, boxes_ir, landms, IR_WIN_SIZE)
