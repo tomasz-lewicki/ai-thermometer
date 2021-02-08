@@ -12,6 +12,7 @@ import numpy as np
 from ir import IRThread
 from rgb import RGBThread
 from ui import make_ir_view, make_rgb_view, make_combined_view
+from utils.transforms import transform_boxes
 
 from config import (
     HZ_CAP,
@@ -27,7 +28,7 @@ from config import (
     X_DISPLAY_ADDR,
     VIS_BBOX_COLOR,
     IR_BBOX_COLOR,
-    FACE_DET_MODEL
+    FACE_DET_MODEL,
 )
 
 
@@ -77,29 +78,25 @@ def mainloop():
         boxes = boxes[keep]
         landms = landms[keep]
 
+        boxes_ir = transform_boxes(boxes, 0.9, 0.9, 0, 0)
+
+        # Render UI views
+        ir_view = make_ir_view(ir_arr, scores, boxes_ir, landms, IR_WIN_SIZE)
         rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
+        combo_view = rgb_arr  # make_combined_view(rgb_arr, ir_arr)
 
-        ir_arr_zoomed_out = zoom_out(ir_arr)
-        arr_combined = make_combined_view(rgb_arr, ir_arr_zoomed_out)
-
-        # TODO: fix in new UI
-        ir_view = ir_arr
-        # ir_view = make_ir_view(
-        #     rgb_arr, ir_arr, dets, temps, IR_WIN_SIZE, bb_color=IR_BBOX_COLOR
-        # )
-
-        # Show
+        # Show rendered UI
         if SHOW_DISPLAY:
             cv2.imshow(VIS_WIN_NAME, rgb_view)
             cv2.imshow(IR_WIN_NAME, ir_view)
-            cv2.imshow("Combined", arr_combined)
+            cv2.imshow("Combined", combo_view)
             key = cv2.waitKey(1) & 0xFF
 
-            # if the `q` key was pressed in the cv2 window, break from the loop
+            # if the `q` key was pressed in the cv2 window, we break from the loop and exit the program
             if key == ord("q"):
                 break
 
-        # Save frames
+        # Save images to filesystem
         if SAVE_FRAMES:
             if executor._work_queue.qsize() > MAX_FILE_QUEUE:
                 print(
@@ -111,6 +108,10 @@ def mainloop():
                 # The ret value of imwrite can be obtained from:
                 # future = executor.submit(...)
                 # future.result()
+
+                # OPTIMIZE: we're saving frames with main loop frequency (up to 20Hz)
+                # It would be more efficient to check if the frames changed between
+                # iterations
                 executor.submit(
                     cv2.imwrite, f"{LOG_DIR}/frames/{i:05d}-rgb.jpg", rgb_view
                 )
