@@ -6,8 +6,8 @@ VIS_WIN_NAME = "RGB view"
 VIS_BBOX_COLOR = (0, 0, 255)  # red
 IR_BBOX_COLOR = (0, 255, 0)  # green
 
-IR_WIN_SIZE = (400, 300)
-VIS_WIN_SIZE = (400, 300)
+IR_WIN_SIZE = (960, 720)  # splits 1080p screen in half
+VIS_WIN_SIZE = (960, 720)
 
 SAVE_FRAMES = True
 SHOW_DISPLAY = True
@@ -17,4 +17,4 @@ FRAME_SIZE = (1024, 768)
 
 X_DISPLAY_ADDR = ":0"
 
-FACE_DET_MODEL = "retinaface" # alternatively SSD
+FACE_DET_MODEL = "retinaface"  # alternatively SSD

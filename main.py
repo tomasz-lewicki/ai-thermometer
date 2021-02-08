@@ -51,7 +51,7 @@ def setup_display(display_addr):
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
-    cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[1], 0)
+    cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[0], 1) # horizontal, side by side
 
 
 def read_temps(arr, bboxes):
