@@ -54,6 +54,34 @@ def setup_display(display_addr):
     cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[1], 0)
 
 
+def read_temps(arr, bboxes):
+    """
+    arr - NumPy array of temperatures in deg C
+    """
+    temps = []
+    (H, W) = arr.shape
+
+    for box in bboxes:
+
+        box_px = np.array([H, W, H, W]) * box
+        box_px = np.rint(box_px).astype(np.int)
+        x1, y1, x2, y2 = box_px
+
+        roi = arr[y1:y2, x1:x2]
+        roi = roi[roi > 30]  # reject regions below 30 degrees as background
+
+        if roi.size != 0:
+            Tavg = np.mean(roi)
+            Tmax = np.max(roi)
+            T90th = np.percentile(roi, 90)
+        else:
+            Tavg, Tmax, T90th = [float("nan")] * 3
+
+        temps.append((Tavg, Tmax, T90th))
+
+    return temps
+
+
 def mainloop():
 
     for i in itertools.count(start=0, step=1):
@@ -78,10 +106,11 @@ def mainloop():
         boxes = boxes[keep]
         landms = landms[keep]
 
-        boxes_ir = transform_boxes(boxes, 1.1, 1.1, 0, 0)
+        boxes_ir = transform_boxes(boxes, 1.05, 1.05, 0, 0)
+        temps = read_temps(temp_arr, boxes_ir)
 
         # Render UI views
-        ir_view = make_ir_view(temp_arr, scores, boxes_ir, landms, IR_WIN_SIZE)
+        ir_view = make_ir_view(temp_arr, scores, boxes_ir, landms, temps, IR_WIN_SIZE)
         rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
         combo_view = rgb_arr  # make_combined_view(rgb_arr, ir_arr)
 
