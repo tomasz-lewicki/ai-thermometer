@@ -17,7 +17,7 @@ def make_combined_view(rgb_arr, ir_arr):
 
 def make_rgb_view(arr, scores, boxes, landms, win_size):
 
-    W,H = win_size
+    W, H = win_size
     arr = cv2.resize(arr, (W, H))
 
     for score, box, landm in zip(scores, boxes, landms):
@@ -56,13 +56,13 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
     return arr
 
 
-def make_ir_view(arr, scores, boxes, landms, win_size, thr_min=32, thr_max=40):
+def make_ir_view(arr, scores, boxes, landms, temps, win_size, thr_min=32, thr_max=40):
 
-    W,H = win_size
+    W, H = win_size
     arr = cv2.resize(arr, (W, H))
     arr = colormap(arr, thr_min, thr_max)
 
-    for score, box, landm in zip(scores, boxes, landms):
+    for score, box, landm, temp in zip(scores, boxes, landms, temps):
 
         # convert boxes to pixel frame
         box_px = np.array([W, H, W, H]) * box
@@ -72,11 +72,38 @@ def make_ir_view(arr, scores, boxes, landms, win_size, thr_min=32, thr_max=40):
         # draw bounding box
         cv2.rectangle(arr, (x1, y1), (x2, y2), (255, 255, 0), 2)
 
-        # draw label
+        # draw temp info
+        (Tavg, Tmax, T90th) = temp
+
+        line1 = (x1, y1 - 35 if y1 > 20 else y1 + 10)
+        line2 = (line1[0], line1[1] + 15)
+        line3 = (line1[0], line1[1] + 30)
+
+        # TODO: there must be a better way to put multiline text..
         cv2.putText(
             arr,
-            f"conf: {score*100:2.0f}%",
-            org=(x1, y1 - 10 if y1 > 20 else y1 + 10),
+            f"Tavg: {Tavg:2.2f}C",
+            org=line1,
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.5,
+            color=(255, 255, 0),
+            thickness=1,
+        )
+
+        cv2.putText(
+            arr,
+            f"Tmax: {Tmax:2.2f}C",
+            org=line2,
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.5,
+            color=(255, 255, 0),
+            thickness=1,
+        )
+
+        cv2.putText(
+            arr,
+            f"T90th: {T90th:2.2f}C",
+            org=line3,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
             color=(255, 255, 0),
