@@ -29,6 +29,11 @@ from config import (
     VIS_BBOX_COLOR,
     IR_BBOX_COLOR,
     FACE_DET_MODEL,
+    CALIBRATE,
+    CALIB_T,
+    CALIB_BOX,
+    CMAP_TEMP_MIN,
+    CMAP_TEMP_MAX,
 )
 
 
@@ -51,19 +56,33 @@ def setup_display(display_addr):
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
-    cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[0], 1) # horizontal, side by side
+    cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[0], 1)  # horizontal, side by side
 
 
-def read_temps(arr, bboxes):
+def get_reference_temp(arr, calib_box):
+    (H, W) = arr.shape
+    box_px = np.array([W, H, W, H]) * calib_box
+    box_px = np.rint(box_px).astype(np.int)
+    x1, y1, x2, y2 = box_px
+    roi = arr[y1:y2, x1:x2]
+    print(roi)
+    print(roi.shape)
+    T = roi.mean()
+    std = np.std(roi)
+
+    return T, std
+
+
+def get_bb_temps(arr, bboxes):
     """
-    arr - NumPy array of temperatures in deg C
+    arr: NumPy array of temperatures in deg C
     """
     temps = []
     (H, W) = arr.shape
 
     for box in bboxes:
 
-        box_px = np.array([H, W, H, W]) * box
+        box_px = np.array([W, H, W, H]) * box
         box_px = np.rint(box_px).astype(np.int)
         x1, y1, x2, y2 = box_px
 
@@ -90,7 +109,7 @@ def mainloop():
 
         ir_raw = ir_thread.raw
         ir_arr = ir_thread.frame
-        temp_arr = ir_thread.temperatures
+        temp_arr = ir_thread.temperatures(upscaled=False)
 
         rgb_arr = rgb_thread.frame
         scores, boxes, landms = rgb_thread.get_detections()
@@ -107,18 +126,35 @@ def mainloop():
         landms = landms[keep]
 
         boxes_ir = transform_boxes(boxes, 1.05, 1.05, 0, 0)
-        temps = read_temps(temp_arr, boxes_ir)
+
+        if CALIBRATE:
+            print(temp_arr.shape)
+            meas_temp, stddev = get_reference_temp(temp_arr, CALIB_BOX)
+            print(f"Measured temp of the reference point: {meas_temp} +- {stddev} C")
+            drift = CALIB_T - meas_temp
+            temp_arr_cal = temp_arr + drift
+            temps = get_bb_temps(temp_arr_cal, boxes_ir)
+        else:
+            temps = get_bb_temps(temp_arr, boxes_ir)
 
         # Render UI views
-        ir_view = make_ir_view(temp_arr, scores, boxes_ir, landms, temps, IR_WIN_SIZE)
+        ir_view = make_ir_view(
+            temp_arr,
+            scores,
+            boxes_ir,
+            landms,
+            temps,
+            CALIB_BOX,
+            IR_WIN_SIZE,
+            CMAP_TEMP_MIN,
+            CMAP_TEMP_MAX,
+        )
         rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
-        combo_view = rgb_arr  # make_combined_view(rgb_arr, ir_arr)
 
         # Show rendered UI
         if SHOW_DISPLAY:
             cv2.imshow(VIS_WIN_NAME, rgb_view)
             cv2.imshow(IR_WIN_NAME, ir_view)
-            cv2.imshow("Combined", combo_view)
             key = cv2.waitKey(1) & 0xFF
 
             # if the `q` key was pressed in the cv2 window, we break from the loop and exit the program

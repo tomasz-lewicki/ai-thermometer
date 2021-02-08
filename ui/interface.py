@@ -56,11 +56,24 @@ def make_rgb_view(arr, scores, boxes, landms, win_size):
     return arr
 
 
-def make_ir_view(arr, scores, boxes, landms, temps, win_size, thr_min=32, thr_max=40):
+def draw_box(arr, box):
+
+    (H, W) = arr.shape[:2]
+    box_px = np.array([W, H, W, H]) * box
+    box_px = np.rint(box_px).astype(np.int)
+    x1, y1, x2, y2 = box_px
+    cv2.rectangle(arr, (x1, y1), (x2, y2), (255, 255, 255), 2)
+
+
+def make_ir_view(
+    arr, scores, boxes, landms, temps, calib_box, win_size, thr_min=32, thr_max=40
+):
 
     W, H = win_size
     arr = cv2.resize(arr, (W, H))
     arr = colormap(arr, thr_min, thr_max)
+
+    draw_box(arr, calib_box)
 
     for score, box, landm, temp in zip(scores, boxes, landms, temps):
 
@@ -86,7 +99,7 @@ def make_ir_view(arr, scores, boxes, landms, temps, win_size, thr_min=32, thr_ma
             org=line1,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
-            color=(255, 255, 0),
+            color=(255, 255, 255),
             thickness=1,
         )
 
@@ -96,7 +109,7 @@ def make_ir_view(arr, scores, boxes, landms, temps, win_size, thr_min=32, thr_ma
             org=line2,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
-            color=(255, 255, 0),
+            color=(255, 255, 255),
             thickness=1,
         )
 
@@ -106,7 +119,7 @@ def make_ir_view(arr, scores, boxes, landms, temps, win_size, thr_min=32, thr_ma
             org=line3,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
-            color=(255, 255, 0),
+            color=(255, 255, 255),
             thickness=1,
         )
 

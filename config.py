@@ -1,7 +1,7 @@
 HZ_CAP = 20
 LOG_DIR = "logs"
-IR_WIN_NAME = "IR view"
 VIS_WIN_NAME = "RGB view"
+IR_WIN_NAME = "IR view"
 
 VIS_BBOX_COLOR = (0, 0, 255)  # red
 IR_BBOX_COLOR = (0, 255, 0)  # green
@@ -18,3 +18,10 @@ FRAME_SIZE = (1024, 768)
 X_DISPLAY_ADDR = ":0"
 
 FACE_DET_MODEL = "retinaface"  # alternatively SSD
+
+CALIBRATE = False # we default to false
+CALIB_T = 40 # temperature to which the blackbody reference is set to
+CALIB_BOX = [8/160, 106/120, 20/160, 115/120]
+
+CMAP_TEMP_MIN = 30
+CMAP_TEMP_MAX = 40
