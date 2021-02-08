@@ -16,3 +16,5 @@ MAX_FILE_QUEUE = 10
 FRAME_SIZE = (1024, 768)
 
 X_DISPLAY_ADDR = ":0"
+
+FACE_DET_MODEL = "retinaface" # alternatively SSD

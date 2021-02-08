@@ -27,6 +27,7 @@ from config import (
     X_DISPLAY_ADDR,
     VIS_BBOX_COLOR,
     IR_BBOX_COLOR,
+    FACE_DET_MODEL
 )
 
 
@@ -132,7 +133,7 @@ def mainloop():
 
 if __name__ == "__main__":
 
-    rgb_thread = RGBThread()
+    rgb_thread = RGBThread(model=FACE_DET_MODEL)
     rgb_thread.start()
 
     ir_thread = IRThread(resize_to=FRAME_SIZE)
