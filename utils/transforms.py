@@ -1,4 +1,6 @@
+import numpy as np
 import cv2
+
 
 def img2euc(x, y):
     """
@@ -26,15 +28,17 @@ def shift(x, y, dx, dy):
     y += dy
     return x, y
 
+
 def zoom_out(arr):
     W, H = arr.shape[:2]
 
     padded = cv2.copyMakeBorder(
         arr, 125, 75, 75, 75, cv2.BORDER_CONSTANT, value=(0, 0, 0)
     )
-    zoomed_out = cv2.resize(padded, (H,W), interpolation=cv2.INTER_CUBIC)
+    zoomed_out = cv2.resize(padded, (H, W), interpolation=cv2.INTER_CUBIC)
 
     return zoomed_out
+
 
 def transform_boxes(bboxes, scale_x=1, scale_y=1, shift_x=0, shift_y=0):
 
