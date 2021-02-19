@@ -141,7 +141,8 @@ def make_ir_view(
 def colormap(arr_temps, thr_min=30, thr_max=40):
 
     # make background (a 3channel normalized gray image)
-    bg = cv2.normalize(arr_temps, None, 0, 255, cv2.NORM_MINMAX)
+    bg = np.clip(arr_temps, -273, thr_min)  # so we use the entire 0-255 range in bg
+    bg = cv2.normalize(bg, None, 0, 255, cv2.NORM_MINMAX)
     bg = bg.astype(np.uint8)
     bg = cv2.cvtColor(bg, cv2.COLOR_GRAY2BGR)  # 1ch -> 3ch
 
