@@ -125,7 +125,7 @@ def mainloop():
         boxes = boxes[keep]
         landms = landms[keep]
 
-        boxes_ir = transform_boxes(boxes, 1.05, 1.05, 0, 0)
+        boxes_ir = transform_boxes(boxes, 1.25, 1.25, 0, 0)
 
         if CALIBRATE:
             print(temp_arr.shape)
