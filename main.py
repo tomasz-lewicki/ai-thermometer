@@ -13,6 +13,7 @@ from ir import IRThread
 from rgb import RGBThread
 from ui import make_ir_view, make_rgb_view, make_combined_view
 from utils.transforms import transform_boxes
+from utils.neopixels import NeopixelIndicator, NEOPIXEL_COLORS
 
 from config import (
     HZ_CAP,
@@ -34,6 +35,7 @@ from config import (
     CALIB_BOX,
     CMAP_TEMP_MIN,
     CMAP_TEMP_MAX,
+    NEOPIXELS_ENABLED,
 )
 
 
@@ -137,6 +139,11 @@ def mainloop():
         else:
             temps = get_bb_temps(temp_arr, boxes_ir)
 
+        if NEOPIXELS_ENABLED:
+            neopixels.set_color(
+                NEOPIXEL_COLORS["GREEN"] if all(temps < 37) else NEOPIXEL_COLORS["RED"]
+            )
+
         # Render UI views
         ir_view = make_ir_view(
             temp_arr,
@@ -210,6 +217,9 @@ if __name__ == "__main__":
 
     if SHOW_DISPLAY:
         setup_display(X_DISPLAY_ADDR)
+
+    if NEOPIXELS_ENABLED:
+        neopixels = NeopixelIndicator()
 
     while rgb_thread.frame is None:
         print("Waiting for RGB frames")
