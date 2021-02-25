@@ -20,7 +20,6 @@ from config import (
     SHOW_DISPLAY,
     SAVE_FRAMES,
     MAX_FILE_QUEUE,
-    FRAME_SIZE,  # TODO: make everything size-independent
     IR_WIN_NAME,
     IR_WIN_SIZE,
     VIS_WIN_NAME,
@@ -107,9 +106,7 @@ def mainloop():
 
         time_start = time.monotonic()
 
-        ir_raw = ir_thread.raw
-        ir_arr = ir_thread.frame
-        temp_arr = ir_thread.temperatures(upscaled=False)
+        temp_arr = ir_thread.temps
 
         rgb_arr = rgb_thread.frame
         scores, boxes, landms = rgb_thread.get_detections()
@@ -202,7 +199,7 @@ if __name__ == "__main__":
     rgb_thread = RGBThread(model=FACE_DET_MODEL)
     rgb_thread.start()
 
-    ir_thread = IRThread(resize_to=FRAME_SIZE)
+    ir_thread = IRThread()
     ir_thread.start()
 
     if SAVE_FRAMES:
@@ -215,7 +212,7 @@ if __name__ == "__main__":
         print("Waiting for RGB frames")
         time.sleep(1)
 
-    while ir_thread.frame is None:
+    while ir_thread.temps is None:
         print("Waiting for IR frames")
         time.sleep(1)
 
