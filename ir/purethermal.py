@@ -165,7 +165,8 @@ class IRThread(Thread):
                 raw = crop_telemetry(raw)
                 
                 # processing
-                arr_c = ktoc(raw) # 16-bit Kelvin to deg C
+                arr_c = ktoc(raw.astype(np.float32)) # Convert 16-bit Kelvin to deg C.
+                # Casting to float prevents underflow of uint16 type in ktoc between -10C to 0C
                 arr_c_big = resize(arr_c, size=self._resize_to)
                 arr_n = normalize(arr_c_big.copy())
 
