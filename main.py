@@ -55,7 +55,9 @@ def setup_display(display_addr):
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
-    cv2.moveWindow(IR_WIN_NAME, VIS_WIN_SIZE[0], 1)  # horizontal, side by side
+    cv2.moveWindow(VIS_WIN_NAME, 0, 0)  # move RGB window to upper-left corner
+    cv2.moveWindow(IR_WIN_NAME, IR_WIN_SIZE[0], 0)  # Align windows side by side
+    print((IR_WIN_SIZE[0], 0))
 
 
 def get_reference_temp(arr, calib_box):
