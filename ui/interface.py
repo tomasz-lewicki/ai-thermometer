@@ -2,6 +2,10 @@ import numpy as np
 import cv2
 from utils.transforms import img2euc, euc2img, shift, zoom_out
 
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
+BLUE = (255, 0, 0)
+
 
 def make_combined_view(rgb_arr, ir_arr):
 
@@ -82,15 +86,25 @@ def make_ir_view(
         box_px = np.rint(box_px).astype(np.int)
         x1, y1, x2, y2 = box_px
 
-        # draw bounding box
-        cv2.rectangle(arr, (x1, y1), (x2, y2), (255, 255, 0), 2)
-
-        # draw temp info
-        (Tavg, Tmax, T90th) = temp
-
+        # precompute text line locations
         line1 = (x1, y1 - 35 if y1 > 20 else y1 + 10)
         line2 = (line1[0], line1[1] + 15)
         line3 = (line1[0], line1[1] + 30)
+
+        (Tavg, Tmax, T90th) = temp
+
+        text_color = bb_color = RED if Tmax > 37.5 else GREEN
+
+        # Shade the region behind the text
+        # TODO: un-hardcode all this
+        arr[
+            line1[1] - 15 : line3[1] + 5, line1[0] : line1[0] + 125, :  # x  # y  # c
+        ] = 0
+
+        print(line1[1], line3[1])
+
+        # draw bounding box
+        cv2.rectangle(arr, (x1, y1), (x2, y2), bb_color, 2)
 
         # TODO: there must be a better way to put multiline text..
         cv2.putText(
@@ -99,7 +113,7 @@ def make_ir_view(
             org=line1,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
-            color=(255, 255, 255),
+            color=text_color,
             thickness=1,
         )
 
@@ -109,7 +123,7 @@ def make_ir_view(
             org=line2,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
-            color=(255, 255, 255),
+            color=text_color,
             thickness=1,
         )
 
@@ -119,11 +133,11 @@ def make_ir_view(
             org=line3,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
-            color=(255, 255, 255),
+            color=text_color,
             thickness=1,
         )
 
-        if any(landm):
+        if landm is not None:
             # convert landmarks to pixel frame
             landm_px = np.array([W, H] * 5) * landm
             landm_px = np.rint(landm_px).astype(np.int)
