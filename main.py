@@ -135,7 +135,7 @@ def mainloop():
             print(f"Drift: {drift:.2f}")
             if stddev > 0.5:
                 print(
-                    f"Warning: measured stddev={stddev:.2f} across the blackbody reference!"
+                    f"Warning: measured high stddev={stddev:.2f} across the blackbody reference!"
                 )
 
         temps = get_bb_temps(temp_arr, boxes_ir)
