@@ -1,28 +1,25 @@
-# AI Thermometer for Elevated Temperature Screening
+# AI Thermometer
+Contactless temperature mesurement using IR & RGB cameras and Deep CNN facial detection.
 
-## Version 0.4: Retinaface Facial Detection
+## Demo
 
-### Healthy subject
+### Normal temperature
 ![](docs/images/retinaface/healthy.gif)
-### (Artificially) elevated temperature:
+### Elevated temperature
 ![](docs/images/retinaface/elevated.gif)
 
-## Version 0.3: SSD with ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
-
-...
-
-## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
-Watch full video: [https://www.youtube.com/watch?v=j9eo9Cs8J8I](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
-
-![](docs/images/haar/combined_short.gif)
-
-
-## Version 0.1: SSD (COCO) + FLIR Lepton 3.5 temp. measurement (~12FPS w/ GPU accel.)
-Watch full video: [https://www.youtube.com/watch?v=i2XMtshdjn8](https://www.youtube.com/watch?v=i2XMtshdjn8)
-
-![](docs/images/ssd/ssd_short.gif)
+## What's new in v0.4
+* New facial detector (handles partial occlusion, e.g. with a mask)
+* Added IR camera drift compensation with an external blackbody
 
 ## Hardware 
+To build this project you will need:
+- Jetson Nano Dev Kit
+- Raspberry Pi Camera Module V2.1
+- FLIR Lepton 3.5 IR Camera
+- Purethermal2 USB board
+- 3D printed enclosure (live 3D model available at: [https://a360.co/3g8kfqV)](https://a360.co/3g8kfqV))
+
 ![wireframe image](docs/images/wireframe.png)
 
 ## Quickstart 
@@ -98,9 +95,22 @@ cp libuvc.so ~/ai-thermometer/ir/libuvc_wrapper
 
 You don't need ```sudo``` to run any code in this repository 🙂
 
-## ACM SenSys 2020 Demo
+## Previous versions
+
+## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
+Watch full video: [https://www.youtube.com/watch?v=j9eo9Cs8J8I](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
+
+![](docs/images/haar/combined_short.gif)
+
+
+## Version 0.1: SSD (COCO) + FLIR Lepton 3.5 temp. measurement (~12FPS w/ GPU accel.)
+Watch full video: [https://www.youtube.com/watch?v=i2XMtshdjn8](https://www.youtube.com/watch?v=i2XMtshdjn8)
+
+![](docs/images/ssd/ssd_short.gif)
+
+## Citation
 ACM SenSys 2020 demo paper: https://dl.acm.org/doi/10.1145/3384419.3430433 and Video demo: [https://youtu.be/3wAjgFXskrE](https://youtu.be/3wAjgFXskrE)
-### If find this useful for academic purposes, please cite our work: 
+### If find this useful for academic purposes, please cite our ACM SenSys 2020 demo paper: 
 Tomasz Lewicki and Kaikai Liu. 2020. AI thermometer for temperature screening: demo abstract. In Proceedings of the 18th Conference on Embedded Networked Sensor Systems (SenSys '20). Association for Computing Machinery, New York, NY, USA, 597–598. DOI:https://doi.org/10.1145/3384419.3430433
 #### Bibtex: 
 @inproceedings{10.1145/3384419.3430433,
