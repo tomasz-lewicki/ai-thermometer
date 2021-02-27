@@ -101,8 +101,6 @@ def make_ir_view(
             line1[1] - 15 : line3[1] + 5, line1[0] : line1[0] + 125, :  # x  # y  # c
         ] = 0
 
-        print(line1[1], line3[1])
-
         # draw bounding box
         cv2.rectangle(arr, (x1, y1), (x2, y2), bb_color, 2)
 
