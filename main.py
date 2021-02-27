@@ -182,10 +182,14 @@ def mainloop():
                 # It would be more efficient to check if the frames changed between
                 # iterations
                 executor.submit(
-                    cv2.imwrite, f"{LOG_DIR}/frames/{i:05d}-rgb.jpg", rgb_view
+                    cv2.imwrite,
+                    f"{LOG_DIR}/frames/{session_id}-{i:05d}-rgb.jpg",
+                    rgb_view,
                 )
                 executor.submit(
-                    cv2.imwrite, f"{LOG_DIR}/frames/{i:05d}-ir.png", ir_view
+                    cv2.imwrite,
+                    f"{LOG_DIR}/frames/{session_id}-{i:05d}-ir.png",
+                    ir_view,
                 )
 
         main_latency = time.monotonic() - time_start
@@ -202,6 +206,9 @@ def mainloop():
 
 
 if __name__ == "__main__":
+
+    session_id = int(time.time())
+    # For an unique id: session_id = uuid.uuid4()
 
     rgb_thread = RGBThread(model=FACE_DET_MODEL)
     rgb_thread.start()
