@@ -199,9 +199,10 @@ def mainloop():
         # Quick f-string format specifiers reference:
         # f'{value:{width}.{precision}}'
         print(
-            f"RGB thread latency={rgb_thread._delay:6.2f}ms   "
-            f"IR thread latency={ir_thread.latency:6.2f}ms    "
-            f"Main thread latency={1000*main_latency:6.2f}ms"
+            f"INFO: Thread latencies   "
+            f"Main={1000*main_latency:6.2f}ms   "
+            f"RGB={rgb_thread._delay:6.2f}ms   "
+            f"IR={ir_thread.latency:6.2f}ms"
         )
 
         time.sleep(max(0, 1 / HZ_CAP - main_latency))
