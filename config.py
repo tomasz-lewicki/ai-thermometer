@@ -13,13 +13,11 @@ SAVE_FRAMES = True
 SHOW_DISPLAY = True
 MAX_FILE_QUEUE = 10
 
-FRAME_SIZE = (1024, 768)
-
 X_DISPLAY_ADDR = ":0"
 
 FACE_DET_MODEL = "retinaface"  # alternatively SSD
 
-CALIBRATE = False # we default to false
+CALIBRATE = False # We default to false. Otherwise very large errors for users who deploy without a BB reference.
 CALIB_T = 40 # temperature to which the blackbody reference is set to
 CALIB_BOX = [8/160, 106/120, 20/160, 115/120]
 
