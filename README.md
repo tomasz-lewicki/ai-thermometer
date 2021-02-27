@@ -1,9 +1,15 @@
 # AI Thermometer for Elevated Temperature Screening
 
+## Version 0.4: Retinaface Facial Detection
 
-## Version 0.3: ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
+### Healthy subject
+![](docs/images/retinaface/healthy.gif)
+### (Artificially) elevated temperature:
+![](docs/images/retinaface/elevated.gif)
 
-Video coming soon!
+## Version 0.3: SSD with ResNet-10 Facial Detection + FLIR Lepton 3.5 temp. measurement (~17 FPS w/ GPU accel.)
+
+...
 
 ## Version 0.2: Haar Cascade + FLIR Lepton 3.5 temp. measurement (~10FPS, CPU only)
 Watch full video: [https://www.youtube.com/watch?v=j9eo9Cs8J8I](https://www.youtube.com/watch?v=j9eo9Cs8J8I)
@@ -50,6 +56,14 @@ python3 main.py
 
 6. Optionally, 3D print & assemble the enclosure from [here](https://a360.co/3g8kfqV)
 
+## Limitations
+
+### IR and RGB camera alignment.
+
+The current way of calculating the correspondence between IR and RGB cameras is not ideal.
+Factors, such as the non-rigid mount of the sensor on the Raspberry Pi CMV2.1 don't help.
+I'm actively working on calibration code that takes into account the intrinsic parameters of both cameras, which should allow for obtaining a pixel-level correspondence between the imags.
+
 ## FAQ/common issues:
 
 ### 1. uvc_open error -3
@@ -88,7 +102,7 @@ You don't need ```sudo``` to run any code in this repository 🙂
 ACM SenSys 2020 demo paper: https://dl.acm.org/doi/10.1145/3384419.3430433 and Video demo: [https://youtu.be/3wAjgFXskrE](https://youtu.be/3wAjgFXskrE)
 ### If find this useful for academic purposes, please cite our work: 
 Tomasz Lewicki and Kaikai Liu. 2020. AI thermometer for temperature screening: demo abstract. In Proceedings of the 18th Conference on Embedded Networked Sensor Systems (SenSys '20). Association for Computing Machinery, New York, NY, USA, 597–598. DOI:https://doi.org/10.1145/3384419.3430433
-#### Latex bibtex citation: 
+#### Bibtex: 
 @inproceedings{10.1145/3384419.3430433,
 author = {Lewicki, Tomasz and Liu, Kaikai},
 title = {AI Thermometer for Temperature Screening: Demo Abstract},
