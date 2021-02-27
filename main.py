@@ -145,7 +145,8 @@ def mainloop():
             temp_arr,
             scores,
             boxes_ir,
-            landms,
+            len(scores) * [None],  # don't feed landmarks
+            # TODO: revisit this when we have improved homography-based transform
             temps,
             CALIB_BOX,
             IR_WIN_SIZE,
