@@ -14,11 +14,13 @@ def uvc_init(ctx):
         print("uvc_init error")
         exit(res)
 
+
 def find_device(ctx, dev):
     res = libuvc.uvc_find_device(ctx, byref(dev), PT_USB_VID, PT_USB_PID, 0)
     if res < 0:
         print("uvc_find_device error")
         exit(res)
+
 
 def open_device(dev, devh):
     res = libuvc.uvc_open(dev, byref(devh))
@@ -28,18 +30,19 @@ def open_device(dev, devh):
     else:
         print("device opened!")
 
+
 def check_frame_formats(frame_formats):
     if len(frame_formats) == 0:
         print("device does not support Y16")
         exit(1)
 
+
 def start_streaming(devh, ctrl, ptr_callback):
-    res = libuvc.uvc_start_streaming(
-        devh, byref(ctrl), ptr_callback, None, 0
-    )
+    res = libuvc.uvc_start_streaming(devh, byref(ctrl), ptr_callback, None, 0)
     if res < 0:
         print("uvc_start_streaming failed: {0}".format(res))
         exit(1)
+
 
 def start_pt2(dev, devh, ctx, q):
     # initialize Pure Thermal 2 board
@@ -63,11 +66,14 @@ def start_pt2(dev, devh, ctx, q):
         frame_formats[0].wHeight,
         int(1e7 / frame_formats[0].dwDefaultFrameInterval),
     )
-    
-    PTR_PY_FRAME_CALLBACK = CFUNCTYPE(None, POINTER(uvc_frame), c_void_p)(py_frame_callback)
+
+    PTR_PY_FRAME_CALLBACK = CFUNCTYPE(None, POINTER(uvc_frame), c_void_p)(
+        py_frame_callback
+    )
     start_streaming(devh, ctrl, PTR_PY_FRAME_CALLBACK)
 
     return PTR_PY_FRAME_CALLBACK
+
 
 def py_frame_callback(frame, userptr):
     array_pointer = cast(
@@ -78,10 +84,13 @@ def py_frame_callback(frame, userptr):
         frame.contents.height, frame.contents.width
     )
 
-    assert frame.contents.data_bytes == (2 * frame.contents.width * frame.contents.height)
+    assert frame.contents.data_bytes == (
+        2 * frame.contents.width * frame.contents.height
+    )
 
     if not q.full():
         q.put(data)
+
 
 def setup():
     ctx = POINTER(uvc_context)()
@@ -123,36 +132,31 @@ def setup():
         int(1e7 / frame_formats[0].dwDefaultFrameInterval),
     )
 
-    PTR_PY_FRAME_CALLBACK = CFUNCTYPE(None, POINTER(uvc_frame), c_void_p)(py_frame_callback)
-
-    res = libuvc.uvc_start_streaming(
-        devh, byref(ctrl), PTR_PY_FRAME_CALLBACK, None, 0
+    PTR_PY_FRAME_CALLBACK = CFUNCTYPE(None, POINTER(uvc_frame), c_void_p)(
+        py_frame_callback
     )
+
+    res = libuvc.uvc_start_streaming(devh, byref(ctrl), PTR_PY_FRAME_CALLBACK, None, 0)
     if res < 0:
         print("uvc_start_streaming failed: {0}".format(res))
         exit(1)
 
-
     return ctx, dev, devh, ctrl
 
+
 class IRThread(Thread):
-    def __init__(self, bufsize=2, resize_to=(800,600), thr_temp=28):
+    def __init__(self, bufsize=2, thr_temp=28):
         super(IRThread, self).__init__()
-        
+
         self._ctx = POINTER(uvc_context)()
         self._dev = POINTER(uvc_device)()
         self._devh = POINTER(uvc_device_handle)()
         self._cb_ptr = start_pt2(self._dev, self._devh, self._ctx, q)
 
         self._thr_temp = thr_temp
-        self._resize_to = resize_to
-
         self._raw = None
-        self._arr_c = None
-        self._arr_c_big = None
-        self._arr_n = None
+        self._arr_deg_c = None
 
-        self._bboxes = None
         self._latency = -1.0
         self._running = True
 
@@ -160,22 +164,15 @@ class IRThread(Thread):
         try:
             while self._running:
                 start_time = time.monotonic()
-                # get frame
+
                 raw = q.get(True, 500)
                 raw = crop_telemetry(raw)
-                
-                # processing
-                arr_c = ktoc(raw.astype(np.float32)) # Convert 16-bit Kelvin to deg C.
+                arr_c = ktoc(raw.astype(np.float32))  # Convert 16-bit Kelvin to deg C.
                 # Casting to float prevents underflow of uint16 type in ktoc between -10C to 0C
-                arr_c_big = resize(arr_c, size=self._resize_to)
-                arr_n = normalize(arr_c_big.copy())
 
                 # Save memebers
                 self._raw = raw
-                self._arr_c = arr_c
-                self._arr_c_big = arr_c_big
-                self._arr_n = arr_n
-
+                self._arr_deg_c = arr_c
                 self._latency = 1000 * (time.monotonic() - start_time)
 
         finally:
@@ -188,27 +185,13 @@ class IRThread(Thread):
 
     @property
     def raw(self):
-        return self._raw
+        return self._raw.copy()
 
     @property
-    def temperatures(self, upscaled=True):
-        if upscaled:
-            return self._arr_c_big
-        else:
-            return self._arr_c
+    def temps(self):
+        # TODO: locking much?
+        return self._arr_deg_c
 
-    @property
-    def frame(self):
-        """
-        returns an uint8 array normalized between 0-255
-        """
-        # TODO: add locks
-        return self._arr_n
-    
-    @property
-    def bboxes(self):
-        return self._bboxes
-        
     @property
     def latency(self):
         return self._latency
@@ -216,10 +199,13 @@ class IRThread(Thread):
     def stop(self):
         self._running = False
 
-q = Queue(2) # not ideal, but q must be global for the callback function to have access to it
+
+q = Queue(
+    2
+)  # not ideal, but q must be global for the callback function to have access to it
 
 if __name__ == "__main__":
-    
+
     # example usage
 
     ctx = POINTER(uvc_context)()
@@ -236,4 +222,3 @@ if __name__ == "__main__":
         libuvc.uvc_stop_streaming(devh)
         libuvc.uvc_unref_device(dev)
         libuvc.uvc_exit(ctx)
-

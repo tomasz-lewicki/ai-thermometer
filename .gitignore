@@ -147,4 +147,9 @@ output/
 vis/caffe
 *.mkv
 
+.vscode
 logs/
+
+# we'd rather have the most up-to-date script from 
+# https://github.com/mdegans/nano_build_opencv
+build_opencv.sh
