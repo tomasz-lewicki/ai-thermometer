@@ -1,8 +1,6 @@
 # AI Thermometer
 Contactless temperature mesurement using IR & RGB cameras and Deep CNN facial detection.
 
-## Demo
-
 ### Normal temperature
 ![](docs/images/retinaface/healthy.gif)
 ### Elevated temperature
@@ -63,7 +61,7 @@ I'm actively working on calibration code that takes into account the intrinsic p
 
 ## FAQ/common issues:
 
-### 1. uvc_open error -3
+1. `uvc_open error -3`
 
 Reason: Your current user does not have r/w access to the PureThermal USB device. 
 
@@ -76,7 +74,7 @@ sudo udevadm trigger
 
 For a better, fine-grained permission setup, create a new group, give permissions to that group only and your user to the newly created group. You can read more [here](http://wiki.ros.org/libuvc_camera#Permissions).
 
-### 2. Illegal instruction (core dumped)
+2. `Illegal instruction (core dumped)`
 
 Reason: The provided  ```libuvc.so``` is compiled for AArch64.
 It is a custom version of libuvc that supports Y16 video format. If you're using different architecture, you will need to build the library from source:
@@ -91,9 +89,9 @@ make
 cp libuvc.so ~/ai-thermometer/ir/libuvc_wrapper
 ```
 
-### 3. Using sudo
+3. using sudo or getting `permission denied`
 
-You don't need ```sudo``` to run any code in this repository 🙂
+You don't need ```sudo``` to run the code in this repository 🙂
 
 ## Previous versions
 
