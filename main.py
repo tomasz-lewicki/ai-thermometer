@@ -126,10 +126,19 @@ def mainloop():
             # TODO: wrap this into a function
             meas_temp, stddev = get_reference_temp(temp_arr, CALIB_BOX)
             drift = CALIB_T - meas_temp
-            temp_arr_cal = temp_arr + drift
-            temps = get_bb_temps(temp_arr_cal, boxes_ir)
-        else:
-            temps = get_bb_temps(temp_arr, boxes_ir)
+            temp_arr += drift
+
+            # TODO: log this to a temperatures.log
+            print(
+                f"Measured temp of the reference point: {meas_temp:.2f} +- {stddev:.2f} C"
+            )
+            print(f"Drift: {drift:.2f}")
+            if stddev > 0.5:
+                print(
+                    f"Warning: measured stddev={stddev:.2f} across the blackbody reference!"
+                )
+
+        temps = get_bb_temps(temp_arr, boxes_ir)
 
         # Render UI views
         ir_view = make_ir_view(
