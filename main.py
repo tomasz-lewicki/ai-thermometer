@@ -120,7 +120,7 @@ def mainloop():
         boxes = boxes[keep]
         landms = landms[keep]
 
-        boxes_ir = transform_boxes(boxes, 1.25, 1.25, 0, 0)
+        boxes_ir = transform_boxes(boxes, 1.1, 1.1, 0, 0)
 
         if CALIBRATE:
             # TODO: wrap this into a function
