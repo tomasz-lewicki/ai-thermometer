@@ -51,7 +51,7 @@ def setup_display(display_addr):
     if os.environ.get("DISPLAY") is None:
         os.environ["DISPLAY"] = display_addr
     elif X_DISPLAY_ADDR:
-        print("WARN: Using $DISPLAY from environment, not from config")
+        print("INFO: Using $DISPLAY from environment, not from config")
 
     cv2.namedWindow(VIS_WIN_NAME)
     cv2.namedWindow(IR_WIN_NAME)
@@ -64,8 +64,6 @@ def get_reference_temp(arr, calib_box):
     box_px = np.rint(box_px).astype(np.int)
     x1, y1, x2, y2 = box_px
     roi = arr[y1:y2, x1:x2]
-    print(roi)
-    print(roi.shape)
     T = roi.mean()
     std = np.std(roi)
 
@@ -125,9 +123,8 @@ def mainloop():
         boxes_ir = transform_boxes(boxes, 1.25, 1.25, 0, 0)
 
         if CALIBRATE:
-            print(temp_arr.shape)
+            # TODO: wrap this into a function
             meas_temp, stddev = get_reference_temp(temp_arr, CALIB_BOX)
-            print(f"Measured temp of the reference point: {meas_temp} +- {stddev} C")
             drift = CALIB_T - meas_temp
             temp_arr_cal = temp_arr + drift
             temps = get_bb_temps(temp_arr_cal, boxes_ir)
