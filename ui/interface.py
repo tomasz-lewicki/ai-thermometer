@@ -70,14 +70,16 @@ def draw_box(arr, box):
 
 
 def make_ir_view(
-    arr, scores, boxes, landms, temps, calib_box, win_size, thr_min=32, thr_max=40
+    arr, scores, boxes, landms, temps, calibrate, calib_box, win_size, thr_min=32, thr_max=40
 ):
 
     W, H = win_size
     arr = cv2.resize(arr, (W, H))
     arr = colormap(arr, thr_min, thr_max)
 
-    draw_box(arr, calib_box)
+    # draw the calib box if calibration is specified
+    if calibrate: 
+        draw_box(arr, calib_box)
 
     for score, box, landm, temp in zip(scores, boxes, landms, temps):
 
