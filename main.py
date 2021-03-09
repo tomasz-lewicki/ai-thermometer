@@ -100,6 +100,23 @@ def get_bb_temps(arr, bboxes):
     return temps
 
 
+def calibration(temp_arr):
+    meas_temp, stddev = get_reference_temp(temp_arr, CALIB_BOX)
+    drift = CALIB_T - meas_temp
+    temp_arr += drift
+
+    # TODO: log this to a temperatures.log
+    print(
+        f"Measured temp of the reference point: {meas_temp:.2f} +- {stddev:.2f} C"
+    )
+    print(f"Drift: {drift:.2f}")
+    if stddev > 0.5:
+        print(
+            f"Warning: measured high stddev={stddev:.2f} across the blackbody reference!"
+        ) 
+
+    return temp_arr, drift
+
 def mainloop():
 
     for i in itertools.count(start=0, step=1):
@@ -125,20 +142,7 @@ def mainloop():
         boxes_ir = transform_boxes(boxes, 1.1, 1.1, 0, 0)
 
         if CALIBRATE:
-            # TODO: wrap this into a function
-            meas_temp, stddev = get_reference_temp(temp_arr, CALIB_BOX)
-            drift = CALIB_T - meas_temp
-            temp_arr += drift
-
-            # TODO: log this to a temperatures.log
-            print(
-                f"Measured temp of the reference point: {meas_temp:.2f} +- {stddev:.2f} C"
-            )
-            print(f"Drift: {drift:.2f}")
-            if stddev > 0.5:
-                print(
-                    f"Warning: measured high stddev={stddev:.2f} across the blackbody reference!"
-                )
+            temp_arr, drift = calibration(temp_arr) 
 
         temps = get_bb_temps(temp_arr, boxes_ir)
 
@@ -218,6 +222,9 @@ if __name__ == "__main__":
 
     ir_thread = IRThread()
     ir_thread.start()
+
+    if not CALIBRATE:
+        CALIB_BOX = None
 
     if SAVE_FRAMES:
         executor = ThreadPoolExecutor(max_workers=4)
