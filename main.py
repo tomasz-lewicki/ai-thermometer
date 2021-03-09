@@ -154,7 +154,6 @@ def mainloop():
             len(scores) * [None],  # don't feed landmarks
             # TODO: revisit this when we have improved homography-based transform
             temps,
-            CALIBRATE,
             CALIB_BOX,
             IR_WIN_SIZE,
             CMAP_TEMP_MIN,
@@ -223,6 +222,9 @@ if __name__ == "__main__":
 
     ir_thread = IRThread()
     ir_thread.start()
+
+    if not CALIBRATE:
+        CALIB_BOX = None
 
     if SAVE_FRAMES:
         executor = ThreadPoolExecutor(max_workers=4)
