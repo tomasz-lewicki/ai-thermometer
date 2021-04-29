@@ -12,12 +12,15 @@ Contactless temperature mesurement using IR & RGB cameras and Deep CNN facial de
 
 ## Hardware 
 To build this project you will need:
-- Jetson Nano Dev Kit
-- Raspberry Pi Camera Module V2.1
-- FLIR Lepton 3.5 IR Camera
-- Purethermal2 USB board
-- 3D printed enclosure (live 3D model available at: [https://a360.co/3g8kfqV)](https://a360.co/3g8kfqV))
-
+|#|Part|link|Price (USD)|
+|-|-|-|-|
+|1|Jetson Nano Dev Kit|[link](https://www.sparkfun.com/products/16271)| 99 | 
+|3|FLIR Lepton 3.5 IR Camera | [link](https://store.groupgets.com/products/flir-lepton-3-5)| 199 |
+|4|GroupGets Purethermal2 Module | [link](https://store.groupgets.com/products/purethermal-2)| 99 |
+|2|Raspberry Pi Camera Module V2.1 |[link](https://www.sparkfun.com/products/14028) | 25 |
+|5|Noctua cooling fan | [link](https://www.amazon.com/Noctua-NF-A4x10-PWM-4-Pin-Premium/dp/B07DXRNYNX/) | 14 |
+|6|3D printed enclosure | [3D model](https://a360.co/3g8kfqV) | - |
+|total | | | 436 |
 ![wireframe image](docs/images/wireframe.png)
 
 ## Quickstart 
@@ -106,23 +109,3 @@ Watch full video: [https://www.youtube.com/watch?v=i2XMtshdjn8](https://www.yout
 
 ![](docs/images/ssd/ssd_short.gif)
 
-## Citation
-ACM SenSys 2020 demo paper: https://dl.acm.org/doi/10.1145/3384419.3430433 and Video demo: [https://youtu.be/3wAjgFXskrE](https://youtu.be/3wAjgFXskrE)
-### If find this useful for academic purposes, please cite our ACM SenSys 2020 demo paper: 
-Tomasz Lewicki and Kaikai Liu. 2020. AI thermometer for temperature screening: demo abstract. In Proceedings of the 18th Conference on Embedded Networked Sensor Systems (SenSys '20). Association for Computing Machinery, New York, NY, USA, 597–598. DOI:https://doi.org/10.1145/3384419.3430433
-#### Bibtex: 
-@inproceedings{10.1145/3384419.3430433,
-author = {Lewicki, Tomasz and Liu, Kaikai},
-title = {AI Thermometer for Temperature Screening: Demo Abstract},
-year = {2020},
-isbn = {9781450375900},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3384419.3430433},
-doi = {10.1145/3384419.3430433},
-booktitle = {Proceedings of the 18th Conference on Embedded Networked Sensor Systems},
-pages = {597–598},
-numpages = {2},
-location = {Virtual Event, Japan},
-series = {SenSys '20}
-}
