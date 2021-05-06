@@ -7,12 +7,12 @@ gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=
 
 ## Capture at full resolution, display on the screen
 ```shell
-gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2 ! 'video/x-raw,width=960, height=720' ! nvvidconv ! nvegltransform ! nveglglessink -e
+gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2 ! 'video/x-raw,width=960, height=720' ! nvvidconv ! nvegltransform ! nveglglessink -e
 ```
 
 ## Cropped
 ```shell
-gst-launch-1.0 nvarguscamerasrc sensor_mode=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2 ! videocrop top=96 left=137 right=137 bottom=96 ! 'video/x-raw,width=800, height=600' ! nvvidconv ! nvegltransform ! nveglglessink -e
+gst-launch-1.0 nvarguscamerasrc sensor_id=0 ! 'video/x-raw(memory:NVMM),width=3264, height=2464, framerate=21/1, format=NV12' ! nvvidconv flip-method=2 ! videocrop top=96 left=137 right=137 bottom=96 ! 'video/x-raw,width=800, height=600' ! nvvidconv ! nvegltransform ! nveglglessink -e
 ```
 
 ## General form to add cropping:
