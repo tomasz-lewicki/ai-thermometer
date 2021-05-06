@@ -21,6 +21,8 @@ To build this project you will need:
 |5|Noctua cooling fan | [link](https://www.amazon.com/Noctua-NF-A4x10-PWM-4-Pin-Premium/dp/B07DXRNYNX/) | 14 |
 |6|3D printed enclosure | [3D model](https://a360.co/3g8kfqV) | - |
 |total | | | 436 |
+
+Enclosure (available [here](https://a360.co/3g8kfqV) ): 
 ![wireframe image](docs/images/wireframe.png)
 
 ## Quickstart 
