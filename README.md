@@ -44,7 +44,7 @@ chmod +x build_opencv.sh
 4. Download AI Thermometer
 
 ```shell
-git clone https://github.com/tomek-l/ai-thermometer
+git clone --recursive https://github.com/tomek-l/ai-thermometer
 cd ai-thermometer
 ```
 
