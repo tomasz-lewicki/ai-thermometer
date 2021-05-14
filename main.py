@@ -33,6 +33,7 @@ from config import (
     CALIB_BOX,
     CMAP_TEMP_MIN,
     CMAP_TEMP_MAX,
+    T_THR
 )
 
 
@@ -154,6 +155,7 @@ def mainloop():
             IR_WIN_SIZE,
             CMAP_TEMP_MIN,
             CMAP_TEMP_MAX,
+            T_THR,
         )
         rgb_view = make_rgb_view(rgb_arr, scores, boxes, landms, VIS_WIN_SIZE)
 

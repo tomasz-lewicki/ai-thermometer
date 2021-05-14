@@ -20,6 +20,7 @@ FACE_DET_MODEL = "retinaface"  # alternatively SSD
 CALIBRATE = False # We default to false. Otherwise very large errors for users who deploy without a BB reference.
 CALIB_T = 40 # temperature to which the blackbody reference is set to
 CALIB_BOX = [8/160, 106/120, 20/160, 115/120]
+T_THR = 37.5 #threshold
 
 CMAP_TEMP_MIN = 30
 CMAP_TEMP_MAX = 40

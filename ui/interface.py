@@ -70,7 +70,7 @@ def draw_box(arr, box):
 
 
 def make_ir_view(
-    arr, scores, boxes, landms, temps, calib_box, win_size, thr_min=32, thr_max=40
+    arr, scores, boxes, landms, temps, calib_box, win_size, thr_min=32, thr_max=40, alarm_temp=37.5,
 ):
 
     W, H = win_size
@@ -93,7 +93,7 @@ def make_ir_view(
 
         (Tavg, Tmax, T90th) = temp
 
-        text_color = bb_color = RED if Tmax > 37.5 else GREEN
+        text_color = bb_color = RED if Tmax > alarm_temp else GREEN
 
         # Shade the region behind the text
         # TODO: un-hardcode all this
