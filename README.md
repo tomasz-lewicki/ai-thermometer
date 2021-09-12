@@ -19,10 +19,10 @@ To build this project you will need:
 |4|GroupGets Purethermal2 Module | [link](https://store.groupgets.com/products/purethermal-2)| 99 |
 |2|Raspberry Pi Camera Module V2.1 |[link](https://www.sparkfun.com/products/14028) | 25 |
 |5|Noctua cooling fan | [link](https://www.amazon.com/Noctua-NF-A4x10-PWM-4-Pin-Premium/dp/B07DXRNYNX/) | 14 |
-|6|3D printed enclosure | [3D model](https://a360.co/3g8kfqV) | - |
+|6|3D printed enclosure | [3D model](https://a360.co/3nmDML3) | - |
 |total | | | 436 |
 
-Enclosure (available [here](https://a360.co/3g8kfqV) ): 
+Enclosure (available [here](https://a360.co/3nmDML3) ): 
 ![wireframe image](docs/images/wireframe.png)
 
 ## Quickstart 
@@ -54,7 +54,7 @@ cd ai-thermometer
 python3 main.py
 ```
 
-6. Optionally, 3D print & assemble the enclosure from [here](https://a360.co/3g8kfqV)
+6. Optionally, 3D print & assemble the enclosure from [here](https://a360.co/3nmDML3)
 
 ## Limitations
 
